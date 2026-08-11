@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+html {
+	color-scheme: light;
+}
+
+@theme {
+	/* --font-dm-sans / --font-roboto / --font-space-grotesk are supplied by
+	   next/font in app/layout.tsx. */
+	--font-sans: var(--font-dm-sans), var(--font-roboto), sans-serif;
+	--font-title: var(--font-space-grotesk), sans-serif;
+	--color-body: var(--color-slate-950);
+	--color-nav: #f1f0ed;
+	--color-brand: #fce6df;
+	/* Deeper brand pink — used where the pale --color-brand needs contrast,
+	   e.g. the rating stars on a light background. */
+	--color-brand-dark: #e2918a;
+	--color-background: #fef9f5;
+	--color-border: #ebdad5;
+	--radius-base: 0px;
+
+	/* Typography scale — change sizes/line-heights here in one place.
+	   Each generates a Tailwind utility, e.g. --text-h1 -> text-h1 */
+	--text-display: 3.5rem;
+	--text-display--line-height: 1.05;
+	--text-h1: 4rem;
+	--text-h1--line-height: 1.1;
+	--text-h2: 2rem;
+	--text-h2--line-height: 1.15;
+	--text-h3: 1.5rem;
+	--text-h3--line-height: 1.25;
+	--text-lead: 1.25rem;
+	--text-lead--line-height: 1.6;
+	--text-caption: 0.875rem;
+	--text-caption--line-height: 1.4;
+}
+
+body {
+	color: var(--color-body);
+	font-family: var(--font-sans);
+}
+
+@layer base {
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: var(--font-title);
+	}
+
+	/* Anything interactive gets a pointer; disabled controls opt out. */
+	button:not(:disabled),
+	summary,
+	select,
+	label[for],
+	[role="button"],
+	[role="checkbox"],
+	[type="checkbox"],
+	[type="radio"],
+	[type="file"] {
+		cursor: pointer;
+	}
+
+	button:disabled {
+		cursor: not-allowed;
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.animate-fade-in {
+	animation: fade-in 0.25s ease;
+}
