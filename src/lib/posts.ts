@@ -1,37 +1,17 @@
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { cfImageUrl } from "@/lib/media";
+import { EMPTY_CONTENT } from "@/lib/content";
+import type { PostContent } from "@/lib/content";
 
-// ── Block content model ────────────────────────────────────────────
-// Posts store content as structured blocks (not HTML), so the frontend owns
-// rendering. Rich text inside text blocks is TipTap HTML; internal links are
-// serialised as <a data-post-id="…"> so the FE can resolve the live slug.
-
-// A column inside a `columns` block — a nested list of blocks. The recursion
-// (Block → PostColumn → Block) is what powers layout/grid blocks.
-export type PostColumn = { id: string; blocks: Block[] };
-
-export type Block =
-	| { id: string; type: "paragraph"; data: { html: string } }
-	| { id: string; type: "subtext"; data: { html: string } }
-	| { id: string; type: "heading"; data: { level: 2 | 3 | 4; html: string } }
-	| {
-			id: string;
-			type: "image";
-			data: { mediaId: string; variant: string; alt?: string; caption?: string };
-	  }
-	| { id: string; type: "quote"; data: { html: string; cite?: string } }
-	| { id: string; type: "list"; data: { ordered: boolean; items: string[] } }
-	| { id: string; type: "divider"; data: Record<string, never> }
-	| { id: string; type: "linkbutton"; data: { url: string; label: string } }
-	| { id: string; type: "rating"; data: { value: number } }
-	| { id: string; type: "instagram"; data: { url: string } }
-	| { id: string; type: "columns"; data: { columns: PostColumn[] } };
-
-export type BlockType = Block["type"];
-
-export type PostContent = { version: 1; blocks: Block[] };
-
-export const EMPTY_CONTENT: PostContent = { version: 1, blocks: [] };
+// The admin-side model: everything the editor needs to read and write a post.
+// The public site reads the same rows through `lib/public/posts.ts`, which
+// exposes only the published, anon-safe shape.
+//
+// The block content model now lives in `lib/content.ts` — one definition for
+// both halves of the app. Re-exported here because the whole BlockEditor
+// imports those types from this module.
+export { EMPTY_CONTENT };
+export type { Block, BlockType, PostColumn, PostContent } from "@/lib/content";
 
 // ── Post types ─────────────────────────────────────────────────────
 

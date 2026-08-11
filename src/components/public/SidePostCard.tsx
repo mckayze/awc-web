@@ -1,7 +1,7 @@
 import { Pill } from "@/components/ui/Pill";
-import type { Post } from "./BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
-export function SidePostCard({ post }: { post: Post }) {
+export function SidePostCard({ post }: { post: PostSummary }) {
 	return (
 		<div className="flex gap-3 items-stretch h-full">
 			{/* Image */}

@@ -7,14 +7,14 @@ import { ProductScroller } from "./ProductScroller";
 import { TrendingPostCard } from "./TrendingPostCard";
 import { MailingListCTA } from "./MailingListCTA";
 import type { Product } from "./ProductCard";
-import type { Post } from "./BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
 type CategoryPageProps = {
 	category: string;
 	tagline: string;
 	products: Product[];
-	latestPosts: Post[];
-	editorsPicks: Post[];
+	latestPosts: PostSummary[];
+	editorsPicks: PostSummary[];
 };
 
 export function CategoryPage({

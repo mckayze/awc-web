@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
-import type { Post } from "@/components/public/BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
 	title: "Lifestyle | A Woman's Confidence",
@@ -19,7 +19,7 @@ const products: Product[] = [
 	{ brand: "Therabody", name: "TheraFace Mask", href: "/" },
 ];
 
-const latestPosts: Post[] = [
+const latestPosts: PostSummary[] = [
 	{
 		title: "Morning Supplements Worth Adding to Your Routine",
 		slug: "morning-supplements",
@@ -49,7 +49,7 @@ const latestPosts: Post[] = [
 	},
 ];
 
-const editorsPicks: Post[] = [
+const editorsPicks: PostSummary[] = [
 	{
 		title: "The Sunday Reset Routine That Actually Sticks",
 		slug: "sunday-reset-routine",

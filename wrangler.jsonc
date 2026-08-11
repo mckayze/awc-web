@@ -32,6 +32,13 @@
 			"service": "web"
 		}
 	],
+	"r2_buckets": [
+		{
+			// Incremental (ISR) cache store, see https://opennext.js.org/cloudflare/caching
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "awc-blog-cache"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},

@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Next 16 renamed the `middleware` file convention to `proxy`. Same runtime,
-// same semantics.
+// Next 16 renamed the `middleware` file convention to `proxy`. Same semantics,
+// but it now defaults to the Node.js runtime — `runtime: "edge"` in the config
+// below is required, as OpenNext/workerd cannot run Node proxies and the build
+// fails outright without it.
 //
 // Two jobs, both scoped to /admin/* by the matcher below:
 //  1. Refresh the Supabase session and write the rotated cookies back, so a

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
-import type { Post } from "@/components/public/BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
 	title: "Makeup | A Woman's Confidence",
@@ -18,7 +18,7 @@ const products: Product[] = [
 	{ brand: "Hourglass", name: "Ambient Lighting Powder", href: "/" },
 ];
 
-const latestPosts: Post[] = [
+const latestPosts: PostSummary[] = [
 	{
 		title: "Battle of the Brands: Bullet Lipsticks – Satin and Matte Formulas Ranked",
 		slug: "bullet-lipsticks-ranked",
@@ -48,7 +48,7 @@ const latestPosts: Post[] = [
 	},
 ];
 
-const editorsPicks: Post[] = [
+const editorsPicks: PostSummary[] = [
 	{
 		title: "Eyeshadow Palettes Worth the Investment",
 		slug: "eyeshadow-palettes-investment",

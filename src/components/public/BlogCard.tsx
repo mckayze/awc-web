@@ -1,17 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
+import type { PostSummary } from "@/lib/public/posts";
 
-export type Post = {
-	title: string;
-	slug: string;
-	categories: string[];
-	date: string;
-	excerpt: string;
-	image_url?: string;
-};
-
-export function BlogCard({ post }: { post: Post }) {
+export function BlogCard({ post }: { post: PostSummary }) {
 	return (
 		<div className="flex flex-col gap-6 md:flex-row md:gap-8">
 			<div className="relative w-full aspect-[4/3] md:w-1/2 shrink-0 rounded-base overflow-hidden bg-nav">

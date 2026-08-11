@@ -59,15 +59,13 @@ export function kindFromMime(mime: string): MediaKind {
 
 // ── Backend wiring ─────────────────────────────────────────────────
 // Images live in Cloudflare Images; this table holds one row per file with
-// the Cloudflare image id in external_id. Delivery URLs are built from the
-// (public, non-secret) account hash + a named variant defined in the CF
-// dashboard. Keep "flexible variants" OFF so only named variants resolve.
-
-const CF_HASH = process.env.NEXT_PUBLIC_CF_IMAGES_HASH;
-
-export function cfImageUrl(externalId: string, variant = "public"): string {
-	return `https://imagedelivery.net/${CF_HASH}/${externalId}/${variant}`;
-}
+// the Cloudflare image id in external_id. Delivery URLs come from
+// `lib/images.ts` — re-exported here because every admin call site imports
+// `cfImageUrl` from this module, and the public read model needs it without
+// dragging in the browser Supabase client. (Imported as well as re-exported —
+// mapRow below calls it.)
+import { cfImageUrl } from "@/lib/images";
+export { cfImageUrl };
 
 type MediaRow = {
 	id: string;

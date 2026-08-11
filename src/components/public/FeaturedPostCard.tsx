@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
-import type { Post } from "./BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
-export function FeaturedPostCard({ post }: { post: Post }) {
+export function FeaturedPostCard({ post }: { post: PostSummary }) {
 	return (
 		<div className="flex flex-col gap-4 h-full">
 			{/* Image */}

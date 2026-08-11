@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
-import type { Post } from "./BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
 type TrendingPostCardProps = {
-	post: Post;
+	post: PostSummary;
 	variant?: "default" | "minimal";
 };
 

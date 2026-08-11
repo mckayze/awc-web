@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
-import type { Post } from "@/components/public/BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
 	title: "Skincare | A Woman's Confidence",
@@ -18,7 +18,7 @@ const products: Product[] = [
 	{ brand: "SkinCeuticals", name: "C E Ferulic Serum", href: "/" },
 ];
 
-const latestPosts: Post[] = [
+const latestPosts: PostSummary[] = [
 	{
 		title: "SPF Myths Debunked: What Dermatologists Actually Say",
 		slug: "spf-myths-debunked",
@@ -48,7 +48,7 @@ const latestPosts: Post[] = [
 	},
 ];
 
-const editorsPicks: Post[] = [
+const editorsPicks: PostSummary[] = [
 	{
 		title: "The Truth About Retinol: Myths vs. Facts",
 		slug: "retinol-myths-facts",

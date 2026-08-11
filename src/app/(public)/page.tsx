@@ -9,9 +9,9 @@ import { CategoryScroller } from "@/components/public/CategoryScroller";
 import { MailingListCTA } from "@/components/public/MailingListCTA";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
-import type { Post } from "@/components/public/BlogCard";
+import type { PostSummary } from "@/lib/public/posts";
 
-const featuredPost: Post = {
+const featuredPost: PostSummary = {
 	title: "Battle of the brands: Bullet lipsticks – Satin and matte formulas ranking",
 	slug: "skincare-routine",
 	categories: ["Skincare", "Lifestyle"],
@@ -22,7 +22,7 @@ const featuredPost: Post = {
 	//   "https://awomansconfidence.com/wp-content/uploads/2026/03/Battle-of-the-brands-bullet-lipsticks-1.png",
 };
 
-const trendingPosts: Post[] = [
+const trendingPosts: PostSummary[] = [
 	{
 		title: "The Lip Liner Renaissance: Why Everyone's Obsessed Again",
 		slug: "lip-liner-renaissance",
@@ -79,7 +79,7 @@ const trendingPosts: Post[] = [
 	},
 ];
 
-const sidePosts: Post[] = [
+const sidePosts: PostSummary[] = [
 	{
 		title: "The Best Foundations for Every Skin Tone",
 		slug: "best-foundations",
