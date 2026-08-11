@@ -2,9 +2,15 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import {
+	defaultPreferences,
+	readConsent,
+	type ConsentCategory,
+	type ConsentPreferences,
+} from "@/lib/cookieConsent";
 
 type Category = {
-	key: string;
+	key: ConsentCategory;
 	name: string;
 	description: string;
 	essential?: boolean;
@@ -38,18 +44,18 @@ const CATEGORIES: Category[] = [
 	},
 ];
 
-type Preferences = Record<string, boolean>;
-
 type Props = {
-	onSave: (prefs: Preferences) => void;
+	onSave: (prefs: ConsentPreferences) => void;
 	onAcceptAll: () => void;
 };
 
 export function CookiePreferences({ onSave, onAcceptAll }: Props) {
-	const initial: Preferences = Object.fromEntries(CATEGORIES.map((c) => [c.key, !!c.essential]));
-	const [prefs, setPrefs] = useState(initial);
+	// Reopening the panel shows what was actually saved, not a blank slate.
+	const [prefs, setPrefs] = useState<ConsentPreferences>(
+		() => readConsent()?.prefs ?? defaultPreferences(),
+	);
 
-	function toggle(key: string) {
+	function toggle(key: ConsentCategory) {
 		setPrefs((p) => ({ ...p, [key]: !p[key] }));
 	}
 

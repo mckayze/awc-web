@@ -3,11 +3,24 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { CookiePreferences } from "./CookiePreferences";
-import { OPEN_COOKIE_PREFERENCES } from "@/lib/cookieConsent";
+import {
+	OPEN_COOKIE_PREFERENCES,
+	allPreferences,
+	hasDecided,
+	writeConsent,
+	type ConsentPreferences,
+} from "@/lib/cookieConsent";
 
 export function CookieBanner() {
-	const [visible, setVisible] = useState(true);
+	// Undecided until the cookie has been read, which can only happen after
+	// mount — rendering nothing until then keeps the server and first client
+	// paint identical, so returning visitors get no flash of the banner.
+	const [visible, setVisible] = useState(false);
 	const [showPrefs, setShowPrefs] = useState(false);
+
+	useEffect(() => {
+		if (!hasDecided()) setVisible(true);
+	}, []);
 
 	// Re-open (even after the banner was dismissed) when a page asks to manage
 	// preferences — e.g. the "Manage cookie preferences" button on /cookie-policy.
@@ -20,12 +33,18 @@ export function CookieBanner() {
 		return () => window.removeEventListener(OPEN_COOKIE_PREFERENCES, open);
 	}, []);
 
+	function decide(prefs: ConsentPreferences) {
+		writeConsent(prefs);
+		setVisible(false);
+		setShowPrefs(false);
+	}
+
 	if (!visible) return null;
 
 	return (
 		<div className="fixed bottom-5 left-0 right-0 z-50 px-4 md:px-8">
 			{showPrefs ? (
-				<CookiePreferences onSave={() => setVisible(false)} onAcceptAll={() => setVisible(false)} />
+				<CookiePreferences onSave={decide} onAcceptAll={() => decide(allPreferences())} />
 			) : (
 				<div className="max-w-[1400px] mx-auto bg-white shadow-lg rounded-base p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 border border-border">
 					{/* Decorative — sits left of the whole banner on desktop, but inline
@@ -55,7 +74,7 @@ export function CookieBanner() {
 							</p>
 						</div>
 						<div className="flex flex-col md:flex-row gap-3">
-							<Button onClick={() => setVisible(false)}>Accept All</Button>
+							<Button onClick={() => decide(allPreferences())}>Accept All</Button>
 							<Button variant="outline" onClick={() => setShowPrefs((p) => !p)}>
 								Manage Preferences
 							</Button>
