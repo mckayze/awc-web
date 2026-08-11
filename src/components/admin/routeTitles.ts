@@ -20,6 +20,9 @@ const ROUTE_TITLES: [RegExp, string][] = [
 	[/^\/admin\/users\/[^/]+\/edit\/?$/, "Edit user"],
 	[/^\/admin\/users\/?$/, "Users"],
 	[/^\/admin\/settings\/?$/, "Settings"],
+	// Last resort: every real admin screen is listed above, so anything else
+	// under /admin is the catch-all 404 (the SPA titled it the same way).
+	[/^\/admin(\/|$)/, "Not found"],
 ];
 
 export function routeTitle(pathname: string): string {
