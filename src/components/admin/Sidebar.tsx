@@ -11,7 +11,6 @@ import {
 	Files,
 	FolderTree,
 	Image,
-	MessageSquare,
 	Users,
 	Settings,
 	LogOut,
@@ -25,7 +24,6 @@ const navItems = [
 	{ href: "/admin/pages", label: "Pages", icon: Files, perm: "pages.view" },
 	{ href: "/admin/categories", label: "Categories", icon: FolderTree, perm: "categories.view" },
 	{ href: "/admin/media", label: "Media", icon: Image, perm: "media.view" },
-	{ href: "/admin/comments", label: "Comments", icon: MessageSquare, perm: "comments.view" },
 	{ href: "/admin/users", label: "Users", icon: Users, perm: "users.view" },
 	{ href: "/admin/settings", label: "Settings", icon: Settings, perm: "settings.view" },
 ];

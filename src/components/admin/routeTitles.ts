@@ -15,7 +15,6 @@ const ROUTE_TITLES: [RegExp, string][] = [
 	[/^\/admin\/categories\/[^/]+\/edit\/?$/, "Edit category"],
 	[/^\/admin\/categories\/?$/, "Categories"],
 	[/^\/admin\/media\/?$/, "Media"],
-	[/^\/admin\/comments\/?$/, "Comments"],
 	[/^\/admin\/users\/create\/?$/, "New user"],
 	[/^\/admin\/users\/[^/]+\/edit\/?$/, "Edit user"],
 	[/^\/admin\/users\/?$/, "Users"],
