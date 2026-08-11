@@ -1,0 +1,140 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { deletePost, getPostById, setPostCategories, updatePost } from "@/lib/posts";
+import type { Post } from "@/lib/posts";
+import { usePermissions } from "@/lib/permissions";
+import { PostForm } from "@/components/admin/PostForm";
+import type { PostFormSubmit } from "@/components/admin/PostForm";
+import { ConfirmModal } from "@/components/admin/ConfirmModal";
+
+export default function EditPost() {
+	const { id } = useParams<{ id: string }>();
+	const router = useRouter();
+	const { hasAny } = usePermissions();
+	const [post, setPost] = useState<Post | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [submitting, setSubmitting] = useState(false);
+	const [notice, setNotice] = useState<string | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [deleting, setDeleting] = useState(false);
+
+	useEffect(() => {
+		if (!id) return;
+		getPostById(id)
+			.then(setPost)
+			.catch((e: Error) => setError(e.message))
+			.finally(() => setLoading(false));
+	}, [id]);
+
+	// Auto-dismiss the "saved" confirmation.
+	useEffect(() => {
+		if (!notice) return;
+		const t = setTimeout(() => setNotice(null), 3000);
+		return () => clearTimeout(t);
+	}, [notice]);
+
+	async function handleSubmit({ input, categoryIds }: PostFormSubmit) {
+		if (!id) return;
+		setError(null);
+		setNotice(null);
+		setSubmitting(true);
+		try {
+			await updatePost(id, input);
+			await setPostCategories(id, categoryIds);
+			// Stay on the page — just confirm the save.
+			setSubmitting(false);
+			setNotice("All changes saved");
+		} catch (err) {
+			setError((err as Error).message);
+			setSubmitting(false);
+		}
+	}
+
+	async function handleDelete() {
+		if (!id) return;
+		setError(null);
+		setDeleting(true);
+		try {
+			await deletePost(id);
+			router.push("/admin/posts");
+		} catch (err) {
+			setError((err as Error).message);
+			setDeleting(false);
+			setConfirmDelete(false);
+		}
+	}
+
+	if (loading) return <p className="text-body/60 text-sm">Loading…</p>;
+	if (!post) {
+		return (
+			<section className="animate-fade-in">
+				<p className="text-sm text-red-600">{error ?? "Post not found."}</p>
+				<Link href="/admin/posts" className="text-body/60 mt-3 inline-block text-sm">
+					Back to posts
+				</Link>
+			</section>
+		);
+	}
+
+	return (
+		<section className="animate-fade-in pb-40">
+			<Link
+				href="/admin/posts"
+				className="text-body/60 hover:text-body inline-flex items-center gap-1 text-sm"
+			>
+				<ArrowLeft className="h-4 w-4" aria-hidden="true" />
+				Back to posts
+			</Link>
+
+			<PostForm
+				submitLabel="Save changes"
+				submitting={submitting}
+				error={error}
+				notice={notice}
+				initial={{
+					title: post.title,
+					slug: post.slug,
+					excerpt: post.excerpt,
+					content: post.content,
+					status: post.status,
+					publishedAt: post.publishedAt,
+					featuredImageId: post.featuredImageId,
+					featuredImageUrl: post.featuredImageUrl,
+					categoryIds: post.categories.map((c) => c.id),
+				}}
+				onSubmit={handleSubmit}
+			/>
+
+			{hasAny("posts.delete") && (
+				<div className="border-border mt-10 border-t pt-6">
+					<h2 className="text-caption font-medium text-red-600">Danger zone</h2>
+					<button
+						type="button"
+						onClick={() => setConfirmDelete(true)}
+						disabled={deleting}
+						className="mt-3 border border-red-600 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white disabled:opacity-50"
+					>
+						Delete post
+					</button>
+				</div>
+			)}
+
+			{confirmDelete && (
+				<ConfirmModal
+					title="Delete post?"
+					message="This permanently removes the post. This cannot be undone."
+					confirmLabel="Delete"
+					destructive
+					busy={deleting}
+					onConfirm={handleDelete}
+					onCancel={() => setConfirmDelete(false)}
+				/>
+			)}
+		</section>
+	);
+}
