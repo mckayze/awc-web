@@ -114,7 +114,11 @@ export function PostForm({
 		let publishedAt: string | null = null;
 		if (visibility === "published") {
 			status = "published";
-			publishedAt = initial.publishedAt ?? new Date().toISOString();
+			// Keep the original date when editing an already-live post, but a
+			// future one (left over from a schedule) would keep it hidden.
+			const prior = initial.publishedAt;
+			publishedAt =
+				prior && new Date(prior) <= new Date() ? prior : new Date().toISOString();
 		} else if (visibility === "scheduled") {
 			status = "published";
 			publishedAt = localInputToIso(scheduledAt);
