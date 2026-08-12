@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, ShieldAlert, UserX } from "lucide-react";
+import { CalendarClock, ExternalLink, ShieldAlert, UserX } from "lucide-react";
 import { listPosts, postState } from "@/lib/posts";
 import type { Post } from "@/lib/posts";
 import { listUsers } from "@/lib/users";
@@ -96,81 +96,97 @@ export default function Dashboard() {
 	// width of its own. List blocks span the full row rather than leaving a
 	// ragged half-empty one.
 	return (
-		<section className="animate-fade-in grid grid-cols-1 gap-6 xl:grid-cols-2">
-			{canViewPosts && (
-				<Panel title="Posts" action={{ label: "All posts", href: "/admin/posts" }}>
-					<div className="divide-border grid grid-cols-3 divide-x">
-						<PostStat label="Drafts" value={drafts} />
-						<PostStat label="Scheduled" value={scheduled.length} emphasis={scheduled.length > 0} />
-						<PostStat label="Published" value={published} />
-					</div>
-				</Panel>
-			)}
+		<div className="animate-fade-in flex flex-col gap-6">
+			<div className="flex justify-end">
+				{/* A plain anchor, not <Link> — this leaves the admin for the public
+				    site, so there's nothing to prefetch or client-navigate. */}
+				<a
+					href="/"
+					target="_blank"
+					rel="noreferrer"
+					className="border-body rounded-base text-body inline-flex items-center gap-2 border px-4 py-2 text-sm font-medium transition-all hover:opacity-80"
+				>
+					<ExternalLink className="h-4 w-4" aria-hidden="true" />
+					View site
+				</a>
+			</div>
 
-			{canViewUsers && users && (
-				<Panel title="Users" action={{ label: "Manage users", href: "/admin/users" }}>
-					<div className="flex flex-col gap-4">
-						<div className="flex items-baseline gap-2">
-							<span className="text-3xl font-bold">{users.length}</span>
-							<span className="text-body/60 text-sm">account{users.length === 1 ? "" : "s"}</span>
+			<section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+				{canViewPosts && (
+					<Panel title="Posts" action={{ label: "All posts", href: "/admin/posts" }}>
+						<div className="divide-border grid grid-cols-3 divide-x">
+							<PostStat label="Drafts" value={drafts} />
+							<PostStat label="Scheduled" value={scheduled.length} emphasis={scheduled.length > 0} />
+							<PostStat label="Published" value={published} />
 						</div>
-
-						<ul className="flex flex-col gap-2">
-							<UserFlag
-								icon={ShieldAlert}
-								count={rolelessUsers.length}
-								label="with no role assigned"
-								empty="Everyone has a role"
-							/>
-							<UserFlag
-								icon={UserX}
-								count={disabledUsers.length}
-								label="disabled"
-								empty="No disabled accounts"
-							/>
-						</ul>
-					</div>
-				</Panel>
-			)}
-
-			{canViewPosts && (
-				<div className="xl:col-span-2">
-					<Panel title="Scheduled to publish" action={{ label: "All posts", href: "/admin/posts" }}>
-						{scheduled.length === 0 ? (
-							<p className="text-body/60 text-sm">Nothing scheduled.</p>
-						) : (
-							<ul className="flex flex-col divide-y divide-border">
-								{scheduled.map((p) => (
-									<li key={p.id}>
-										<Link
-											href={`/admin/posts/${p.id}/edit`}
-											className="group flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-										>
-											<CalendarClock
-												className="text-body/40 mt-0.5 h-4 w-4 shrink-0"
-												aria-hidden="true"
-											/>
-											<span className="min-w-0 flex-1">
-												<span className="block truncate text-sm font-medium group-hover:underline underline-offset-4">
-													{p.title}
-												</span>
-												<span className="text-caption text-body/60 mt-0.5 block">
-													{p.publishedAt && (
-														<>
-															{formatWhen(p.publishedAt)} · {formatCountdown(p.publishedAt)}
-														</>
-													)}
-												</span>
-											</span>
-										</Link>
-									</li>
-								))}
-							</ul>
-						)}
 					</Panel>
-				</div>
-			)}
+				)}
+
+				{canViewUsers && users && (
+					<Panel title="Users" action={{ label: "Manage users", href: "/admin/users" }}>
+						<div className="flex flex-col gap-4">
+							<div className="flex items-baseline gap-2">
+								<span className="text-3xl font-bold">{users.length}</span>
+								<span className="text-body/60 text-sm">account{users.length === 1 ? "" : "s"}</span>
+							</div>
+
+							<ul className="flex flex-col gap-2">
+								<UserFlag
+									icon={ShieldAlert}
+									count={rolelessUsers.length}
+									label="with no role assigned"
+									empty="Everyone has a role"
+								/>
+								<UserFlag
+									icon={UserX}
+									count={disabledUsers.length}
+									label="disabled"
+									empty="No disabled accounts"
+								/>
+							</ul>
+						</div>
+					</Panel>
+				)}
+
+				{canViewPosts && (
+					<div className="xl:col-span-2">
+						<Panel title="Scheduled to publish" action={{ label: "All posts", href: "/admin/posts" }}>
+							{scheduled.length === 0 ? (
+								<p className="text-body/60 text-sm">Nothing scheduled.</p>
+							) : (
+								<ul className="flex flex-col divide-y divide-border">
+									{scheduled.map((p) => (
+										<li key={p.id}>
+											<Link
+												href={`/admin/posts/${p.id}/edit`}
+												className="group flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+											>
+												<CalendarClock
+													className="text-body/40 mt-0.5 h-4 w-4 shrink-0"
+													aria-hidden="true"
+												/>
+												<span className="min-w-0 flex-1">
+													<span className="block truncate text-sm font-medium group-hover:underline underline-offset-4">
+														{p.title}
+													</span>
+													<span className="text-caption text-body/60 mt-0.5 block">
+														{p.publishedAt && (
+															<>
+																{formatWhen(p.publishedAt)} · {formatCountdown(p.publishedAt)}
+															</>
+														)}
+													</span>
+												</span>
+											</Link>
+										</li>
+									))}
+								</ul>
+							)}
+						</Panel>
+					</div>
+				)}
 		</section>
+		</div>
 	);
 }
 

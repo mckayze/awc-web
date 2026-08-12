@@ -5,7 +5,7 @@ export function SidePostCard({ post }: { post: PostSummary }) {
 	return (
 		<div className="flex gap-3 items-stretch h-full">
 			{/* Image */}
-			<div className="w-44 sm:w-44 self-stretch rounded-base bg-nav shrink-0 border border-border overflow-hidden">
+			<div className="w-44 sm:w-44 self-stretch rounded-md bg-nav shrink-0 overflow-hidden">
 				{post.image_url && (
 					// eslint-disable-next-line @next/next/no-img-element
 					<img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
@@ -20,7 +20,7 @@ export function SidePostCard({ post }: { post: PostSummary }) {
 					))}
 				</div>
 
-				<h3 className="text-2xl sm:text-3xl font-medium text-black leading-snug font-title">
+				<h3 className="text-2xl sm:text-4xl font-medium text-black leading-snug font-title">
 					{post.title}
 				</h3>
 			</div>

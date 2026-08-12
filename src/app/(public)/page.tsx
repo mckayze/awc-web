@@ -112,19 +112,12 @@ const sidePosts: PostSummary[] = [
 export default function Home() {
 	return (
 		<>
-			<Section className="border-b border-border">
+			<Section className="border-b border-border bg-white">
 				<Container>
-					<div className="mb-6">
-						<Heading variant="h1">Skin, slowly.</Heading>
-						<Heading as="h1" className="text-slate-950/70">
-							A journal of small rituals.
-						</Heading>
-					</div>
 					<div className="grid grid-cols-1 gap-8 md:grid-cols-2">
 						<div>
 							<FeaturedPostCard post={featuredPost} />
 						</div>
-
 						<div className="flex flex-col gap-8">
 							{sidePosts.map((post) => (
 								<div key={post.slug} className="flex-1">
@@ -143,7 +136,7 @@ export default function Home() {
 				<CategoryScroller />
 			</Section>
 
-			<Section className="border-b border-border">
+			<Section className="border-b border-border bg-white">
 				<Container>
 					<SectionHeading
 						title="Trending Posts"

@@ -5,10 +5,14 @@ html {
 }
 
 @theme {
-	/* --font-dm-sans / --font-roboto / --font-space-grotesk are supplied by
-	   next/font in app/layout.tsx. */
+	/* --font-dm-sans / --font-roboto / --font-space-grotesk / --font-playfair /
+	   --font-instrument-serif are supplied by next/font in app/layout.tsx. */
 	--font-sans: var(--font-dm-sans), var(--font-roboto), sans-serif;
-	--font-title: var(--font-space-grotesk), sans-serif;
+	/* Title face. Swap this line to try an alternative:
+	     Playfair         -> var(--font-playfair)
+	     Instrument Serif -> var(--font-instrument-serif)
+	     Space Grotesk    -> var(--font-space-grotesk) */
+	--font-title: var(--font-instrument-serif), "Times New Roman", serif;
 	--color-body: var(--color-slate-950);
 	--color-nav: #f1f0ed;
 	--color-brand: #fce6df;
@@ -48,6 +52,20 @@ body {
 	h5,
 	h6 {
 		font-family: var(--font-title);
+	}
+
+	/* Headings and anything tagged .font-title run at the narrowest width the
+	   Playfair wdth axis allows, for the condensed editorial look. Ignored by
+	   fonts without a wdth axis. */
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6,
+	.font-title {
+		font-variation-settings: "wdth" 87.5;
+		letter-spacing: 0.04em;
 	}
 
 	/* Anything interactive gets a pointer; disabled controls opt out. */
