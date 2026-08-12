@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye } from "lucide-react";
-import { deletePost, getPostById, setPostCategories, updatePost } from "@/lib/posts";
+import { ArrowLeft, ExternalLink, Eye } from "lucide-react";
+import { deletePost, getPostById, postState, setPostCategories, updatePost } from "@/lib/posts";
 import type { Post } from "@/lib/posts";
 import { usePermissions } from "@/lib/permissions";
 import { PostForm } from "@/components/admin/PostForm";
@@ -81,28 +81,36 @@ export default function EditPost() {
 		);
 	}
 
+	// Once a post is actually live there's no point previewing a private copy of
+	// it — send the editor to the real URL instead. "scheduled" stays on preview:
+	// the row says published but the date is future, so /blog/[slug] would 404.
+	const isLive = postState(post.status, post.publishedAt) === "published";
+
 	return (
 		<section className="animate-fade-in pb-40">
 			<div className="flex items-center justify-between gap-4">
 				<Link
 					href="/admin/posts"
-					className="text-body/60 hover:text-body inline-flex items-center gap-1 text-sm"
+					className="border-body text-body hover:bg-body hover:text-background inline-flex items-center gap-1.5 border px-3 py-2 text-sm font-medium transition-colors"
 				>
 					<ArrowLeft className="h-4 w-4" aria-hidden="true" />
 					Back to posts
 				</Link>
 
-				{/* Renders the post as the public site will, drafts included. Reads
-				    the saved row, so unsaved edits in the form aren't reflected —
-				    new tab so nothing in progress is lost. */}
+				{/* Both read the saved row, so unsaved edits in the form aren't
+				    reflected — new tab so nothing in progress is lost. */}
 				<a
-					href={`/admin/preview/posts/${id}`}
+					href={isLive ? `/blog/${post.slug}` : `/admin/preview/posts/${id}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="border-border hover:bg-nav inline-flex items-center gap-1.5 border px-3 py-2 text-sm font-medium transition-colors"
+					className="bg-body text-background inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-opacity hover:opacity-90"
 				>
-					<Eye className="h-4 w-4" aria-hidden="true" />
-					Preview
+					{isLive ? (
+						<ExternalLink className="h-4 w-4" aria-hidden="true" />
+					) : (
+						<Eye className="h-4 w-4" aria-hidden="true" />
+					)}
+					{isLive ? "View live post" : "Preview"}
 				</a>
 			</div>
 
