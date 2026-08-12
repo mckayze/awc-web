@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Section } from "@/components/public/Section";
 import { Container } from "@/components/public/Container";
@@ -51,26 +52,36 @@ function buildPageItems(current: number, total: number, delta = 2): (number | ".
 	return items;
 }
 
+// Reports the navbar's `?q=` up into BlogIndex state. Kept as its own leaf
+// component because `useSearchParams` opts its subtree out of prerendering —
+// isolating it here means the post list itself still renders into the static
+// HTML that gets cached, rather than being replaced by a Suspense fallback.
+function QuerySync({ onChange }: { onChange: (q: string) => void }) {
+	const q = useSearchParams().get("q") ?? "";
+	useEffect(() => {
+		onChange(q);
+	}, [q, onChange]);
+	return null;
+}
+
 export function BlogIndex({
 	posts,
 	categories,
-	initialQuery = "",
 }: {
 	posts: PostSummary[];
 	categories: string[];
-	initialQuery?: string;
 }) {
 	const [activeCategories, setActiveCategories] = useState<string[]>([]);
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [query, setQuery] = useState(initialQuery);
+	const [query, setQuery] = useState("");
 
 	// Re-seed the box and reset paging when arriving with a new ?q= from the
 	// navbar search while already on this page (the component stays mounted).
-	useEffect(() => {
-		setQuery(initialQuery);
+	const handleQueryFromUrl = useCallback((q: string) => {
+		setQuery(q);
 		setCurrentPage(1);
-	}, [initialQuery]);
+	}, []);
 
 	const terms = useMemo(() => query.trim().toLowerCase().split(/\s+/).filter(Boolean), [query]);
 
@@ -100,6 +111,9 @@ export function BlogIndex({
 
 	return (
 		<>
+			<Suspense fallback={null}>
+				<QuerySync onChange={handleQueryFromUrl} />
+			</Suspense>
 			<FilterDrawer
 				open={drawerOpen}
 				onClose={() => setDrawerOpen(false)}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import { deletePost, getPostById, setPostCategories, updatePost } from "@/lib/posts";
 import type { Post } from "@/lib/posts";
 import { usePermissions } from "@/lib/permissions";
@@ -83,13 +83,28 @@ export default function EditPost() {
 
 	return (
 		<section className="animate-fade-in pb-40">
-			<Link
-				href="/admin/posts"
-				className="text-body/60 hover:text-body inline-flex items-center gap-1 text-sm"
-			>
-				<ArrowLeft className="h-4 w-4" aria-hidden="true" />
-				Back to posts
-			</Link>
+			<div className="flex items-center justify-between gap-4">
+				<Link
+					href="/admin/posts"
+					className="text-body/60 hover:text-body inline-flex items-center gap-1 text-sm"
+				>
+					<ArrowLeft className="h-4 w-4" aria-hidden="true" />
+					Back to posts
+				</Link>
+
+				{/* Renders the post as the public site will, drafts included. Reads
+				    the saved row, so unsaved edits in the form aren't reflected —
+				    new tab so nothing in progress is lost. */}
+				<a
+					href={`/admin/preview/posts/${id}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="border-border hover:bg-nav inline-flex items-center gap-1.5 border px-3 py-2 text-sm font-medium transition-colors"
+				>
+					<Eye className="h-4 w-4" aria-hidden="true" />
+					Preview
+				</a>
+			</div>
 
 			<PostForm
 				submitLabel="Save changes"

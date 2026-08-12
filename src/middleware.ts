@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Next 16 renamed the `middleware` file convention to `proxy`. Same semantics,
-// but it now defaults to the Node.js runtime — `runtime: "edge"` in the config
-// below is required, as OpenNext/workerd cannot run Node proxies and the build
-// fails outright without it.
+// Next 16 renamed this convention to `proxy`, but we deliberately stay on the
+// deprecated `middleware` name: `proxy` is hardcoded to the Node.js runtime
+// (its `runtime` config option throws), and OpenNext/workerd only supports edge
+// middleware, so a proxy.ts fails the build outright. `middleware.ts` still
+// compiles to edge in 16. Revisit when OpenNext supports Node middleware —
+// https://github.com/opennextjs/opennextjs-cloudflare/issues/962
 //
 // Two jobs, both scoped to /admin/* by the matcher below:
 //  1. Refresh the Supabase session and write the rotated cookies back, so a
@@ -20,7 +22,7 @@ import { createServerClient } from "@supabase/ssr";
 const LOGIN_PATH = "/admin/login";
 const ADMIN_HOME = "/admin";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
 	const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 	const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 

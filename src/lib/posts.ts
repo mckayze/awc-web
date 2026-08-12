@@ -95,7 +95,10 @@ const LIST_SELECT =
 	" featured:featured_image_id(external_id, mime_type)," +
 	" categories:post_categories(category:category_id(id, name, slug))";
 
-const FULL_SELECT = `${LIST_SELECT}, content`;
+// Exported for the draft-preview reader in `lib/preview/posts.ts`, which runs
+// the same query through the *server* client so it can read unpublished rows
+// as the signed-in user. Shared rather than copied so the two can't drift.
+export const FULL_SELECT = `${LIST_SELECT}, content`;
 
 // ── Queries ────────────────────────────────────────────────────────
 
