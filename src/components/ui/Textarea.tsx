@@ -11,7 +11,7 @@ export function Textarea({ className = "", label, ...props }: TextareaProps) {
 	const textarea = (
 		<textarea
 			className={twMerge(
-				"w-full bg-white border border-border rounded-base px-3 py-3 text-base text-body placeholder:text-body/40 focus:outline-none resize-none",
+				"w-full bg-white border border-border rounded-md px-3 py-3 text-base text-body placeholder:text-body/40 focus:outline-none resize-none",
 				className,
 			)}
 			{...props}

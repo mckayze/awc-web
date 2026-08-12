@@ -19,7 +19,7 @@ export function NewsletterBar() {
 					e.preventDefault();
 					setEmail("");
 				}}
-				className="flex flex-col sm:flex-row"
+				className="flex flex-col gap-2 sm:flex-row"
 			>
 				<Input
 					type="email"
@@ -29,11 +29,7 @@ export function NewsletterBar() {
 					required
 					className="flex-1"
 				/>
-				<Button
-					variant="dark"
-					rightIcon={<SendHorizontal size={16} />}
-					className="-mt-px sm:mt-0 sm:-ml-px"
-				>
+				<Button variant="dark" rightIcon={<SendHorizontal size={16} />}>
 					Subscribe
 				</Button>
 			</form>

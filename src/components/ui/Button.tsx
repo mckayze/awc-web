@@ -13,9 +13,9 @@ const base =
 	"inline-flex items-center justify-center gap-2 text-base font-medium cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none";
 
 const variants = {
-	default: "bg-brand text-body min-h-11 px-6 rounded-base border border-body hover:opacity-80",
-	dark: "bg-body text-white min-h-11 px-6 rounded-base border border-body hover:opacity-80 font-bold",
-	outline: "border border-body text-body min-h-11 px-6 rounded-base hover:opacity-80",
+	default: "bg-brand text-body min-h-11 px-6 rounded-md border border-body hover:opacity-80",
+	dark: "bg-body text-white min-h-11 px-6 rounded-md border border-body hover:opacity-80 font-bold",
+	outline: "border border-body text-body min-h-11 px-6 rounded-md hover:opacity-80",
 	text: "text-body hover:underline underline-offset-4",
 };
 

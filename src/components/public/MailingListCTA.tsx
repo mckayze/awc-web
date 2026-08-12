@@ -30,7 +30,7 @@ export function MailingListCTA() {
 						e.preventDefault();
 						setEmail("");
 					}}
-					className="flex flex-col sm:flex-row mb-2"
+					className="flex flex-col gap-2 sm:flex-row mb-2"
 				>
 					<Input
 						type="email"
@@ -40,7 +40,7 @@ export function MailingListCTA() {
 						required
 						className="flex-1"
 					/>
-					<Button variant="dark" type="submit" className="sm:w-auto w-full -mt-px sm:mt-0 sm:-ml-px">
+					<Button variant="dark" type="submit" className="sm:w-auto w-full">
 						Subscribe
 					</Button>
 				</form>

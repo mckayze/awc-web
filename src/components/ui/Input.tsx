@@ -11,7 +11,7 @@ export function Input({ className = "", label, ...props }: InputProps) {
 	const input = (
 		<input
 			className={twMerge(
-				"w-full bg-white border border-border rounded-base px-3 min-h-11 text-base text-body placeholder:text-body/40 focus:outline-none",
+				"w-full bg-white border border-border rounded-md px-3 min-h-11 text-base text-body placeholder:text-body/40 focus:outline-none",
 				className,
 			)}
 			{...props}
