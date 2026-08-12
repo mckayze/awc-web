@@ -11,7 +11,7 @@ export function NewsletterBar() {
 
 	return (
 		<div className={`flex flex-col gap-4 ${PROSE_WIDTH} mx-auto w-full`}>
-			<p className="text-2xl font-bold text-black text-center font-title">
+			<p className="text-3xl text-black text-center font-title">
 				Stay in the know — join the newsletter
 			</p>
 			<form

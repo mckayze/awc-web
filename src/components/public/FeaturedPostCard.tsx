@@ -1,18 +1,26 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import type { PostSummary } from "@/lib/public/posts";
 
 export function FeaturedPostCard({ post }: { post: PostSummary }) {
+	const href = `/blog/${post.slug}`;
+
+	// The image and the title are the two links into the post. Only those two
+	// trigger the title underline — hovering the tags or date leaves it alone.
 	return (
-		<div className="flex flex-col gap-4 h-full">
+		<div className="group flex flex-col gap-4 h-full">
 			{/* Image */}
-			<div className="w-full aspect-[16/9] rounded-md bg-nav overflow-hidden">
+			<Link
+				href={href}
+				aria-hidden="true"
+				tabIndex={-1}
+				className="card-media w-full aspect-[16/9] rounded-md bg-nav overflow-hidden block"
+			>
 				{post.image_url && (
 					// eslint-disable-next-line @next/next/no-img-element
-					<img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+					<img src={post.image_url} alt="" className="w-full h-full object-cover" />
 				)}
-			</div>
+			</Link>
 
 			{/* Content */}
 			<div className="flex flex-col gap-3 flex-1">
@@ -26,16 +34,13 @@ export function FeaturedPostCard({ post }: { post: PostSummary }) {
 				</div>
 
 				<h2 className="text-3xl sm:text-5xl font-medium text-black leading-snug font-title">
-					{post.title}
-				</h2>
-
-				<p className="text-sm sm:text-lg text-body/70 line-clamp-3 flex-1">{post.excerpt}</p>
-
-				<div>
-					<Link href={`/blog/${post.slug}`}>
-						<Button variant="dark">Read more</Button>
+					<Link
+						href={href}
+						className="underline-offset-4 decoration-1 hover:underline focus-visible:underline group-has-[.card-media:hover]:underline"
+					>
+						{post.title}
 					</Link>
-				</div>
+				</h2>
 			</div>
 		</div>
 	);

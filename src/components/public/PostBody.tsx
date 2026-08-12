@@ -103,7 +103,7 @@ function BlockView({
 			return (
 				<figure className="flex flex-col gap-3">
 					<div
-						className={`bg-nav w-full overflow-hidden ${inColumn ? "h-[360px]" : "aspect-[16/9]"}`}
+						className={`bg-nav rounded-md w-full overflow-hidden ${inColumn ? "h-[360px]" : "aspect-[16/9]"}`}
 					>
 						{/* eslint-disable-next-line @next/next/no-img-element */}
 						<img src={url} alt={block.data.alt ?? ""} className="w-full h-full object-cover" />

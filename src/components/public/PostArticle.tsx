@@ -48,12 +48,10 @@ export function PostArticle({
 							<h1 className="text-4xl md:text-5xl font-bold text-black leading-tight">
 								{post.title}
 							</h1>
-
-							{post.excerpt && <p className="text-xl text-body">{post.excerpt}</p>}
 						</div>
 
 						{/* Right column — featured image */}
-						<div className="bg-nav border border-border aspect-[4/3] w-full overflow-hidden">
+						<div className="bg-nav rounded-md aspect-[16/9] w-full overflow-hidden">
 							{post.image_url && (
 								// eslint-disable-next-line @next/next/no-img-element
 								<img
@@ -67,7 +65,7 @@ export function PostArticle({
 				</Container>
 			</Section>
 
-			<Section className="bg-brand border-b border-border" py="py-14">
+			<Section className="bg-brand border-b border-border" py="py-8">
 				<Container>
 					<NewsletterBar />
 				</Container>

@@ -9,15 +9,15 @@ import { CookieBanner } from "@/components/public/CookieBanner";
 // shell from outside the (public) route group.
 
 const leftLinks = [
-	{ label: "makeup", href: "/makeup" },
-	{ label: "skincare", href: "/skincare" },
-	{ label: "lifestyle", href: "/lifestyle" },
+	{ label: "MAKEUP", href: "/makeup" },
+	{ label: "SKINCARE", href: "/skincare" },
+	{ label: "LIFESTYLE", href: "/lifestyle" },
 ];
 
 const rightLinks = [
-	{ label: "search", href: "#" },
-	{ label: "blog", href: "/blog" },
-	{ label: "about", href: "/about" },
+	{ label: "SEARCH", href: "#" },
+	{ label: "BLOG", href: "/blog" },
+	{ label: "ABOUT", href: "/about" },
 ];
 
 const footerColumns = [

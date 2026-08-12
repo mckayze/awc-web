@@ -98,7 +98,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 								<Link
 									key={link.label}
 									href={link.href}
-									className="text-[22px] font-medium text-zinc-700 hover:text-body"
+									className="text-[20px] font-medium text-zinc-700 hover:text-body"
 								>
 									{link.label}
 								</Link>
@@ -119,7 +119,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 									<button
 										key={link.label}
 										onClick={() => setSearchOpen(true)}
-										className="text-[22px] font-medium text-zinc-700 hover:text-body cursor-pointer"
+										className="text-[20px] font-medium text-zinc-700 hover:text-body cursor-pointer"
 									>
 										{link.label}
 									</button>
@@ -127,7 +127,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 									<Link
 										key={link.label}
 										href={link.href}
-										className="text-[22px] font-medium text-zinc-700 hover:text-body"
+										className="text-[20px] font-medium text-zinc-700 hover:text-body"
 									>
 										{link.label}
 									</Link>

@@ -122,11 +122,12 @@ export function BlogIndex({
 				onApply={handleApply}
 			/>
 
-			<Section className="border-b border-border">
+			<Section className="border-b border-border bg-white">
 				<Container>
 					<div className="mb-8">
 						<h1 className="text-5xl md:text-7xl font-bold leading-tight">All Posts</h1>
 					</div>
+
 					<Separator />
 
 					<div className="relative max-w-md mb-4">
@@ -142,7 +143,7 @@ export function BlogIndex({
 								setCurrentPage(1);
 							}}
 							placeholder="Search posts..."
-							className="w-full bg-white border border-border pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
+							className="w-full bg-white border border-black pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
 						/>
 					</div>
 

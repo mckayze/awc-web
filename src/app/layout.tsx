@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Instrument_Serif, Playfair, Roboto, Space_Grotesk } from "next/font/google";
+import { DM_Sans, Instrument_Serif, Roboto } from "next/font/google";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -12,19 +12,6 @@ const dmSans = DM_Sans({
 	subsets: ["latin"],
 	weight: ["400", "500", "700"],
 	variable: "--font-dm-sans",
-});
-
-const spaceGrotesk = Space_Grotesk({
-	subsets: ["latin"],
-	weight: ["400", "500", "700"],
-	variable: "--font-space-grotesk",
-});
-
-// Variable font: the wdth axis lets titles run condensed (see --font-title in globals.css).
-const playfair = Playfair({
-	subsets: ["latin"],
-	axes: ["wdth"],
-	variable: "--font-playfair",
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -44,10 +31,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html
-			lang="en"
-			className={`${roboto.variable} ${dmSans.variable} ${spaceGrotesk.variable} ${playfair.variable} ${instrumentSerif.variable}`}
-		>
+		<html lang="en" className={`${roboto.variable} ${dmSans.variable} ${instrumentSerif.variable}`}>
 			<head>
 				<link rel="icon" href="/favicon.svg" type="image/svg+xml"></link>
 			</head>
