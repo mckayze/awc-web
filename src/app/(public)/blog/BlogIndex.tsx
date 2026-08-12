@@ -143,7 +143,7 @@ export function BlogIndex({
 								setCurrentPage(1);
 							}}
 							placeholder="Search posts..."
-							className="w-full bg-white border border-black pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
+							className="w-full bg-white border border-black rounded-md pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
 						/>
 					</div>
 

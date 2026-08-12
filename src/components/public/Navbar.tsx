@@ -115,7 +115,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 
 						<div className="flex items-center gap-12">
 							{rightLinks.map((link) =>
-								link.label === "search" ? (
+								link.label.toLowerCase() === "search" ? (
 									<button
 										key={link.label}
 										onClick={() => setSearchOpen(true)}
@@ -220,7 +220,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 											handleSearch();
 										}}
 									>
-										<div className="relative border border-border">
+										<div className="relative border border-border rounded-md overflow-hidden">
 											<Search
 												size={20}
 												className="absolute left-4 top-1/2 -translate-y-1/2 text-black pointer-events-none"
