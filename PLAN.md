@@ -15,7 +15,7 @@ Working list of upcoming work. Ordered loosely by area, not priority.
 - [ ] **White body background** — make the body background white across the app.
 - [ ] **Remove "My Favourite Products" lists** — drop the product scroller sections from the makeup / skincare / lifestyle category pages.
 - [ ] **Categories submenu** — add a nav submenu listing all categories (Glamour-style), then remove the categories block from the homepage.
-- [ ] **Headings on blog post** — h2 needs to be made slightly larger to distinguish itself from h3
+- [x] **Headings on blog post** — h2 needs to be made slightly larger to distinguish itself from h3
 
 ## Newsletter
 

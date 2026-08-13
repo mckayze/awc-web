@@ -130,27 +130,31 @@ export function BlogIndex({
 
 					<Separator />
 
-					<div className="relative max-w-md mb-4">
-						<Search
-							size={18}
-							className="absolute left-4 top-1/2 -translate-y-1/2 text-body/50 pointer-events-none"
-						/>
-						<input
-							type="text"
-							value={query}
-							onChange={(e) => {
-								setQuery(e.target.value);
-								setCurrentPage(1);
-							}}
-							placeholder="Search posts..."
-							className="w-full bg-white border border-black rounded-md pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
-						/>
-					</div>
+					<div className="flex items-center gap-4">
+						<div className="relative max-w-md w-full">
+							<Search
+								size={18}
+								className="absolute left-4 top-1/2 -translate-y-1/2 text-body/50 pointer-events-none"
+							/>
+							<input
+								type="text"
+								value={query}
+								onChange={(e) => {
+									setQuery(e.target.value);
+									setCurrentPage(1);
+								}}
+								placeholder="Search posts..."
+								className="w-full bg-white border border-black rounded-md pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
+							/>
+						</div>
 
-					<div className="flex items-center gap-4 mb-4">
-						<Button onClick={() => setDrawerOpen(true)} leftIcon={<SlidersHorizontal size={15} />}>
-							{`Filter by Categories${activeCategories.length > 0 ? ` (${activeCategories.length})` : ""}`}
-						</Button>
+						<Button
+							onClick={() => setDrawerOpen(true)}
+							aria-label={`Filter by categories${activeCategories.length > 0 ? ` (${activeCategories.length})` : ""}`}
+							className="w-11 px-0 shrink-0"
+							leftIcon={<SlidersHorizontal size={15} />}
+						/>
+
 						{(activeCategories.length > 0 || query.trim().length > 0) && (
 							<Button
 								variant="dark"
@@ -159,11 +163,14 @@ export function BlogIndex({
 									setQuery("");
 								}}
 								leftIcon={<Trash2 size={15} />}
+								className="shrink-0"
 							>
 								Clear filters
 							</Button>
 						)}
 					</div>
+
+					<Separator />
 
 					{activeCategories.length > 0 && (
 						<p className="text-sm text-body/60 mb-2">Filtering by: {activeCategories.join(" / ")}</p>
