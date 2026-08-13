@@ -15,7 +15,7 @@ const featuredPost: PostSummary = {
 	title: "Battle of the brands: Bullet lipsticks – Satin and matte formulas ranking",
 	slug: "skincare-routine",
 	categories: ["Skincare", "Lifestyle"],
-	date: "April 8, 2026",
+	date: "8th April, 2026",
 	excerpt:
 		"We tested over a dozen products to find the perfect morning routine for every skin type. From cleansers to SPF, here's what actually works and why simplicity is the key to glowing skin.",
 	// image_url:
@@ -27,7 +27,7 @@ const trendingPosts: PostSummary[] = [
 		title: "The Lip Liner Renaissance: Why Everyone's Obsessed Again",
 		slug: "lip-liner-renaissance",
 		categories: ["Makeup"],
-		date: "April 7, 2026",
+		date: "7th April, 2026",
 		excerpt:
 			"Lip liners have made a full comeback — and not just for overdrawn lips. Here's how to use them to transform any look.",
 		image_url: "",
@@ -36,7 +36,7 @@ const trendingPosts: PostSummary[] = [
 		title: "SPF Myths Debunked: What Dermatologists Actually Say",
 		slug: "spf-myths-debunked",
 		categories: ["Skincare"],
-		date: "April 6, 2026",
+		date: "6th April, 2026",
 		excerpt:
 			"From 'you don't need it indoors' to 'darker skin tones are protected', we're busting the most common SPF misconceptions.",
 		image_url: "",
@@ -45,7 +45,7 @@ const trendingPosts: PostSummary[] = [
 		title: "The Scalp Care Routine That Changed Everything",
 		slug: "scalp-care-routine",
 		categories: ["Hair Care"],
-		date: "April 4, 2026",
+		date: "4th April, 2026",
 		excerpt:
 			"Healthy hair starts at the root. These scalp treatments and serums are worth adding to your weekly wash day ritual.",
 		image_url: "",
@@ -54,7 +54,7 @@ const trendingPosts: PostSummary[] = [
 		title: "Perfume Layering 101: Building Your Signature Scent",
 		slug: "perfume-layering",
 		categories: ["Fragrance"],
-		date: "April 3, 2026",
+		date: "3rd April, 2026",
 		excerpt:
 			"Layering fragrances is an art form — but it's easier than you think. These combinations are a great place to start.",
 		image_url: "",
@@ -63,7 +63,7 @@ const trendingPosts: PostSummary[] = [
 		title: "Morning Supplements Worth Adding to Your Routine",
 		slug: "morning-supplements",
 		categories: ["Wellness", "Lifestyle"],
-		date: "March 31, 2026",
+		date: "31st March, 2026",
 		excerpt:
 			"From collagen to adaptogens, we break down which supplements are backed by evidence and which are just hype.",
 		image_url: "",
@@ -72,7 +72,7 @@ const trendingPosts: PostSummary[] = [
 		title: "Blush Placement Tricks That Work for Every Face Shape",
 		slug: "blush-placement-tricks",
 		categories: ["Makeup"],
-		date: "March 29, 2026",
+		date: "29th March, 2026",
 		excerpt:
 			"Forget the one-size-fits-all approach. These placement techniques are tailored to your actual bone structure.",
 		image_url: "",
@@ -84,7 +84,7 @@ const sidePosts: PostSummary[] = [
 		title: "The Best Foundations for Every Skin Tone",
 		slug: "best-foundations",
 		categories: ["Makeup"],
-		date: "April 5, 2026",
+		date: "5th April, 2026",
 		excerpt:
 			"Finding the right foundation shouldn't be a guessing game. We break down the top picks across every shade range and finish.",
 		image_url: "",
@@ -93,7 +93,7 @@ const sidePosts: PostSummary[] = [
 		title: "Body Care Rituals Worth Adding to Your Week",
 		slug: "body-care-rituals",
 		categories: ["Body Care", "Lifestyle"],
-		date: "April 2, 2026",
+		date: "2nd April, 2026",
 		excerpt:
 			"From dry brushing to whipped body butters, these simple rituals make a real difference to how your skin looks and feels.",
 		image_url: "",
@@ -102,7 +102,7 @@ const sidePosts: PostSummary[] = [
 		title: "Clean Beauty: What the Labels Actually Mean",
 		slug: "clean-beauty-labels",
 		categories: ["Skincare"],
-		date: "March 28, 2026",
+		date: "28th March, 2026",
 		excerpt:
 			"Natural, non-toxic, clean — the buzzwords are everywhere but the definitions are murky. Here's how to cut through the noise.",
 		image_url: "",

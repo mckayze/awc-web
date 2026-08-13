@@ -24,7 +24,7 @@ const latestPosts: PostSummary[] = [
 		title: "Morning Supplements Worth Adding to Your Routine",
 		slug: "morning-supplements",
 		categories: ["Wellness", "Lifestyle"],
-		date: "March 31, 2026",
+		date: "31st March, 2026",
 		excerpt:
 			"From collagen to adaptogens, we break down which supplements are backed by evidence and which are just hype.",
 		image_url: "",
@@ -33,7 +33,7 @@ const latestPosts: PostSummary[] = [
 		title: "Body Care Rituals Worth Adding to Your Week",
 		slug: "body-care-rituals",
 		categories: ["Body Care", "Lifestyle"],
-		date: "April 2, 2026",
+		date: "2nd April, 2026",
 		excerpt:
 			"From dry brushing to whipped body butters, these simple rituals make a real difference to how your skin looks and feels.",
 		image_url: "",
@@ -42,7 +42,7 @@ const latestPosts: PostSummary[] = [
 		title: "Journaling for Mental Wellness: Where to Start",
 		slug: "journaling-mental-wellness",
 		categories: ["Wellness", "Lifestyle"],
-		date: "March 21, 2026",
+		date: "21st March, 2026",
 		excerpt:
 			"Putting pen to paper is one of the most underrated wellness tools. Here's a simple framework to make it stick.",
 		image_url: "",
@@ -54,7 +54,7 @@ const editorsPicks: PostSummary[] = [
 		title: "The Sunday Reset Routine That Actually Sticks",
 		slug: "sunday-reset-routine",
 		categories: ["Lifestyle", "Wellness"],
-		date: "March 9, 2026",
+		date: "9th March, 2026",
 		excerpt:
 			"A weekly reset doesn't have to be elaborate. These simple habits make Monday feel like a fresh start.",
 		image_url: "",
@@ -63,7 +63,7 @@ const editorsPicks: PostSummary[] = [
 		title: "Movement Practices That Don't Feel Like Exercise",
 		slug: "movement-practices",
 		categories: ["Wellness"],
-		date: "March 12, 2026",
+		date: "12th March, 2026",
 		excerpt:
 			"If the gym isn't for you, there are still plenty of ways to move your body joyfully. Here are some worth trying.",
 		image_url: "",
@@ -72,7 +72,7 @@ const editorsPicks: PostSummary[] = [
 		title: "How to Build a Capsule Fragrance Wardrobe",
 		slug: "capsule-fragrance-wardrobe",
 		categories: ["Fragrance", "Lifestyle"],
-		date: "March 15, 2026",
+		date: "15th March, 2026",
 		excerpt:
 			"Three to five scents can cover every occasion if you choose them wisely. Here's the framework to build yours.",
 		image_url: "",

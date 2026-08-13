@@ -47,14 +47,27 @@ type FullRpc = SummaryRpc & {
 	content_images: Record<string, string> | null;
 };
 
+function ordinal(day: number): string {
+	if (day > 3 && day < 21) return "th";
+	switch (day % 10) {
+		case 1:
+			return "st";
+		case 2:
+			return "nd";
+		case 3:
+			return "rd";
+		default:
+			return "th";
+	}
+}
+
 // Exported so draft preview renders its date identically to the live page.
 export function formatDate(iso: string | null): string {
 	if (!iso) return "";
-	return new Date(iso).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
+	const d = new Date(iso);
+	const day = d.getDate();
+	const month = d.toLocaleDateString("en-US", { month: "long" });
+	return `${day}${ordinal(day)} ${month}, ${d.getFullYear()}`;
 }
 
 function mapSummary(r: SummaryRpc): PostSummary {
