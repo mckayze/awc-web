@@ -28,6 +28,9 @@ export type Block =
 	| { id: string; type: "linkbutton"; data: { url: string; label: string } }
 	| { id: string; type: "rating"; data: { value: number } }
 	| { id: string; type: "instagram"; data: { url: string } }
+	// Cells are inline TipTap HTML (like list items). Every row has the same
+	// length; `header` marks the first row as a header row.
+	| { id: string; type: "table"; data: { header: boolean; rows: string[][] } }
 	| { id: string; type: "columns"; data: { columns: PostColumn[] } };
 
 export type BlockType = Block["type"];

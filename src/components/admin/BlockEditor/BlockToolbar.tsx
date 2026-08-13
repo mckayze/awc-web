@@ -15,6 +15,7 @@ import {
 	Link2,
 	List as ListIcon,
 	ListOrdered,
+	PanelTop,
 	Trash2,
 } from "lucide-react";
 import { twMerge } from "@/lib/twMerge";
@@ -47,6 +48,7 @@ export function BlockToolbar({
 	onTransform,
 	onSetLevel,
 	onToggleOrdered,
+	onToggleHeader,
 }: {
 	block: Block;
 	editor: Editor | null;
@@ -57,6 +59,7 @@ export function BlockToolbar({
 	onTransform: (type: BlockType) => void;
 	onSetLevel: (level: 2 | 3 | 4) => void;
 	onToggleOrdered: (ordered: boolean) => void;
+	onToggleHeader: (header: boolean) => void;
 }) {
 	useEditorTick(editor);
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -74,7 +77,8 @@ export function BlockToolbar({
 	}, [menuOpen]);
 
 	const isText = TEXT_TYPES.includes(block.type);
-	const canFormat = isText && editor;
+	// Tables aren't transformable, but their cells are rich text.
+	const canFormat = (isText || block.type === "table") && editor;
 
 	function toggleLink() {
 		if (!editor) return;
@@ -166,6 +170,20 @@ export function BlockToolbar({
 						onClick={() => onToggleOrdered(true)}
 					>
 						<ListOrdered className="h-4 w-4" />
+					</ToolbarButton>
+				</>
+			)}
+
+			{/* Table header row */}
+			{block.type === "table" && (
+				<>
+					<Divider />
+					<ToolbarButton
+						label="Header row"
+						active={block.data.header}
+						onClick={() => onToggleHeader(!block.data.header)}
+					>
+						<PanelTop className="h-4 w-4" />
 					</ToolbarButton>
 				</>
 			)}

@@ -23,6 +23,12 @@ type RichTextProps = {
 	// Called when pasted plain text spans multiple lines, so the parent can turn
 	// each line into its own block. Returning here means default paste is skipped.
 	onPaste?: (paragraphs: string[]) => void;
+	// For table cells: given the raw pasted text, the parent parses it as a
+	// tab/newline-separated grid and fills surrounding cells. Returns the text
+	// that belongs in *this* cell so it can be inserted directly, or `false` to
+	// fall through to normal single-cell paste (e.g. a plain value with no
+	// tabs/newlines).
+	onPasteGrid?: (text: string) => string | false;
 };
 
 // Strip the wrapping <p>/<h*> so `data.html` stays inline-only.
@@ -43,6 +49,7 @@ export function RichText({
 	onBackspaceEmpty,
 	onSlash,
 	onPaste,
+	onPasteGrid,
 }: RichTextProps) {
 	const editor = useEditor({
 		// The editor renders client-side only: SSR would emit markup the browser
@@ -64,7 +71,17 @@ export function RichText({
 		content: html ? `<p>${html}</p>` : "",
 		editorProps: {
 			attributes: { class: twMerge("be-rich", className) },
-			handlePaste(_view, event) {
+			handlePaste(view, event) {
+				if (onPasteGrid) {
+					const raw = event.clipboardData?.getData("text/plain") ?? "";
+					const cellText = onPasteGrid(raw);
+					if (cellText !== false) {
+						event.preventDefault();
+						const tr = view.state.tr.insertText(cellText, 0, view.state.doc.content.size);
+						view.dispatch(tr);
+						return true;
+					}
+				}
 				if (!onPaste) return false;
 				const text = event.clipboardData?.getData("text/plain") ?? "";
 				const parts = text

@@ -209,6 +209,9 @@ function BlockItem({
 					onToggleOrdered={(ordered) =>
 						block.type === "list" && onReplace({ ...block, data: { ...block.data, ordered } })
 					}
+					onToggleHeader={(header) =>
+						block.type === "table" && onReplace({ ...block, data: { ...block.data, header } })
+					}
 				/>
 			)}
 
@@ -336,6 +339,16 @@ function BlockBody({
 					onRemove={onRemove}
 				/>
 			);
+		case "table":
+			return (
+				<TableBlock
+					block={block}
+					autoFocus={autoFocus}
+					onFocus={onFocus}
+					onReplace={onReplace}
+					onRemove={onRemove}
+				/>
+			);
 		case "image":
 			return <ImageBlock block={block} inColumn={inColumn} onReplace={onReplace} />;
 		case "linkbutton":
@@ -424,6 +437,226 @@ function ListBlock({
 	);
 }
 
+// A grid of rich-text cells. Enter moves down a row (adding one from the last
+// row); Backspace in a fully empty row removes it. Rows and columns are
+// added/removed with the same dashed "+" / floating "×" chrome as ColumnsBlock.
+function TableBlock({
+	block,
+	autoFocus,
+	onFocus,
+	onReplace,
+	onRemove,
+}: {
+	block: Extract<Block, { type: "table" }>;
+	autoFocus: boolean;
+	onFocus: (editor: Editor) => void;
+	onReplace: (next: Block) => void;
+	onRemove: () => void;
+}) {
+	const { header, rows } = block.data;
+	const cols = rows[0]?.length ?? 0;
+	const [focusCell, setFocusCell] = useState<[number, number] | null>(autoFocus ? [0, 0] : null);
+
+	function setRows(next: string[][]) {
+		onReplace({ ...block, data: { ...block.data, rows: next } });
+	}
+
+	function setCell(r: number, c: number, html: string) {
+		setRows(rows.map((row, ri) => (ri === r ? row.map((cell, ci) => (ci === c ? html : cell)) : row)));
+	}
+
+	function addRow() {
+		setRows([...rows, Array(cols).fill("")]);
+		setFocusCell([rows.length, 0]);
+	}
+
+	function addColumn() {
+		setRows(rows.map((row) => [...row, ""]));
+		setFocusCell([0, cols]);
+	}
+
+	function removeRow(r: number) {
+		setRows(rows.filter((_, ri) => ri !== r));
+	}
+
+	function removeColumn(c: number) {
+		setRows(rows.map((row) => row.filter((_, ci) => ci !== c)));
+	}
+
+	function insertRow(at: number) {
+		const next = [...rows];
+		next.splice(at, 0, Array(cols).fill(""));
+		setRows(next);
+	}
+
+	function insertColumn(at: number) {
+		setRows(
+			rows.map((row) => {
+				const next = [...row];
+				next.splice(at, 0, "");
+				return next;
+			}),
+		);
+	}
+
+	function handleEnter(r: number, c: number) {
+		if (r === rows.length - 1) {
+			setRows([...rows, Array(cols).fill("")]);
+		}
+		setFocusCell([r + 1, c]);
+	}
+
+	function handleBackspace(r: number, c: number) {
+		if (!rows[r].every((cell) => !cell)) return;
+		if (rows.length > 1) {
+			removeRow(r);
+			setFocusCell([Math.max(0, r - 1), c]);
+		} else {
+			onRemove();
+		}
+	}
+
+	// Pasting tab/newline-separated text (e.g. copied from a spreadsheet or a
+	// markdown-ish table) fills this cell and its neighbours, growing the grid
+	// to fit. A plain single value falls through to normal single-cell paste.
+	function handlePasteGrid(r0: number, c0: number, text: string): string | false {
+		const lines = text.replace(/\r/g, "").split("\n");
+		if (lines[lines.length - 1] === "") lines.pop();
+		const grid = lines.map((line) => line.split("\t"));
+		if (grid.length === 0 || (grid.length === 1 && grid[0].length === 1)) return false;
+
+		const newRowCount = Math.max(rows.length, r0 + grid.length);
+		const newColCount = Math.max(cols, c0 + Math.max(...grid.map((row) => row.length)));
+		const next = Array.from({ length: newRowCount }, (_, ri) =>
+			Array.from({ length: newColCount }, (_, ci) => {
+				const gr = ri - r0;
+				const gc = ci - c0;
+				if (gr >= 0 && gr < grid.length && gc >= 0 && gc < grid[gr].length) {
+					return escapeHtml(grid[gr][gc].trim());
+				}
+				return rows[ri]?.[ci] ?? "";
+			}),
+		);
+		setRows(next);
+		return (grid[0][0] ?? "").trim();
+	}
+
+	return (
+		<div className="space-y-2">
+			<div className="flex items-stretch gap-2">
+				<div className="border-border w-full rounded-md border">
+				<table className="w-full border-collapse">
+					<tbody>
+						{rows.map((row, r) => (
+							<tr key={r} className="group/row">
+								{row.map((cell, c) => {
+									const isHead = header && r === 0;
+									return (
+										<td
+											key={c}
+											className={twMerge(
+												"border-border group/cell relative px-3 py-2 align-top",
+												r > 0 && "border-t",
+												r < rows.length - 1 && "border-b",
+												c > 0 && "border-l",
+												c < cols - 1 && "border-r",
+												isHead && "bg-brand",
+												isHead && c === 0 && "rounded-tl-md",
+												isHead && c === cols - 1 && "rounded-tr-md",
+											)}
+										>
+											{r === 0 && cols > 1 && (
+												<button
+													type="button"
+													aria-label="Remove column"
+													onMouseDown={(e) => e.stopPropagation()}
+													onClick={() => removeColumn(c)}
+													className="bg-body absolute -top-2.5 left-1/2 z-10 flex h-5 w-5 -translate-x-1/2 items-center justify-center text-white opacity-0 transition-opacity group-hover/cell:opacity-100"
+												>
+													<X className="h-3 w-3" />
+												</button>
+											)}
+											{c === 0 && rows.length > 1 && (
+												<button
+													type="button"
+													aria-label="Remove row"
+													onMouseDown={(e) => e.stopPropagation()}
+													onClick={() => removeRow(r)}
+													className="bg-body absolute -left-2.5 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-white opacity-0 transition-opacity group-hover/row:opacity-100"
+												>
+													<X className="h-3 w-3" />
+												</button>
+											)}
+											{r === 0 && c < cols - 1 && (
+												<button
+													type="button"
+													aria-label="Insert column"
+													onMouseDown={(e) => e.stopPropagation()}
+													onClick={() => insertColumn(c + 1)}
+													className="bg-body absolute -right-2.5 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-white opacity-0 transition-opacity group-hover/cell:opacity-100"
+												>
+													<Plus className="h-3 w-3" />
+												</button>
+											)}
+											{c === 0 && r < rows.length - 1 && (
+												<button
+													type="button"
+													aria-label="Insert row"
+													onMouseDown={(e) => e.stopPropagation()}
+													onClick={() => insertRow(r + 1)}
+													className="bg-body absolute -bottom-2.5 left-1/2 z-10 flex h-5 w-5 -translate-x-1/2 items-center justify-center text-white opacity-0 transition-opacity group-hover/row:opacity-100"
+												>
+													<Plus className="h-3 w-3" />
+												</button>
+											)}
+											<RichText
+												html={cell}
+												autoFocus={focusCell?.[0] === r && focusCell?.[1] === c}
+												placeholder={isHead ? "Header" : ""}
+												onChange={(html) => setCell(r, c, html)}
+												onFocus={(ed) => {
+													setFocusCell(null);
+													onFocus(ed);
+												}}
+												onEnter={() => handleEnter(r, c)}
+												onBackspaceEmpty={() => handleBackspace(r, c)}
+												onPasteGrid={(text) => handlePasteGrid(r, c, text)}
+												className={twMerge(
+													"text-sm leading-relaxed",
+													isHead && "font-semibold",
+												)}
+											/>
+										</td>
+									);
+								})}
+							</tr>
+						))}
+					</tbody>
+				</table>
+				</div>
+				<button
+					type="button"
+					aria-label="Add column"
+					onMouseDown={(e) => e.stopPropagation()}
+					onClick={addColumn}
+					className="border-border text-body/50 hover:bg-nav hover:text-body flex w-8 shrink-0 items-center justify-center border border-dashed"
+				>
+					<Plus className="h-4 w-4" />
+				</button>
+			</div>
+			<button
+				type="button"
+				aria-label="Add row"
+				onMouseDown={(e) => e.stopPropagation()}
+				onClick={addRow}
+				className="border-border text-body/50 hover:bg-nav hover:text-body flex h-8 w-full items-center justify-center border border-dashed"
+			>
+				<Plus className="h-4 w-4" />
+			</button>
+		</div>
+	);
+}
+
 function ImageBlock({
 	block,
 	inColumn,
@@ -464,7 +697,7 @@ function ImageBlock({
 					type="button"
 					onClick={() => setPickerOpen(true)}
 					className={twMerge(
-						"border-border text-body/60 hover:bg-nav flex w-full flex-col items-center justify-center gap-2 border border-dashed text-sm",
+						"border-border text-body/60 hover:bg-nav flex w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed text-sm",
 						boxClass,
 					)}
 				>
@@ -473,7 +706,7 @@ function ImageBlock({
 				</button>
 			) : (
 				<figure className="space-y-2">
-					<div className={twMerge("group/img relative overflow-hidden", boxClass)}>
+					<div className={twMerge("group/img relative overflow-hidden rounded-md", boxClass)}>
 						<img src={url} alt={block.data.alt ?? ""} className="block h-full w-full object-cover" />
 						<div className="absolute right-2 top-2 flex items-center gap-1.5 opacity-0 transition-opacity group-hover/img:opacity-100">
 							<button

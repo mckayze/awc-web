@@ -11,6 +11,7 @@ import {
 	ExternalLink,
 	Star,
 	Camera,
+	Table,
 } from "lucide-react";
 import type { Block, BlockType } from "@/lib/posts";
 
@@ -42,6 +43,7 @@ export const BLOCK_MENU: BlockMeta[] = [
 		description: "Embed a post or reel.",
 		icon: Camera,
 	},
+	{ type: "table", label: "Table", description: "Rows and columns of text.", icon: Table },
 	{ type: "columns", label: "Columns", description: "A row of columns.", icon: Columns3 },
 	{ type: "divider", label: "Divider", description: "A visual separator.", icon: Minus },
 ];
@@ -68,6 +70,18 @@ export function createBlock(type: BlockType): Block {
 			return { id, type, data: { ordered: false, items: [""] } };
 		case "image":
 			return { id, type, data: { mediaId: "", variant: "public", alt: "", caption: "" } };
+		case "table":
+			return {
+				id,
+				type,
+				data: {
+					header: true,
+					rows: [
+						["", ""],
+						["", ""],
+					],
+				},
+			};
 		case "columns":
 			return { id, type, data: { columns: [newColumn(), newColumn()] } };
 		case "divider":

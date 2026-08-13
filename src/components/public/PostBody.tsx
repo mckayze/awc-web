@@ -168,6 +168,62 @@ function BlockView({
 				</a>
 			);
 		}
+		case "table": {
+			const { header, rows } = block.data;
+			if (rows.length === 0 || rows.every((row) => row.every((cell) => !cell.trim()))) {
+				return null;
+			}
+			const head = header ? rows[0] : null;
+			const body = header ? rows.slice(1) : rows;
+			const cols = rows[0]?.length ?? 0;
+			// Outer perimeter gets no border of its own — the rounded wrapper's
+			// border is what shows there. Cells only draw the inner grid lines, so
+			// corners stay a single clean stroke instead of a clipped square one.
+			const edge = (isFirstRow: boolean, isLastRow: boolean, c: number) =>
+				[
+					"border-border",
+					!isFirstRow && "border-t",
+					!isLastRow && "border-b",
+					c > 0 && "border-l",
+					c < cols - 1 && "border-r",
+				]
+					.filter(Boolean)
+					.join(" ");
+			return (
+				<div className="overflow-hidden rounded-md border border-border">
+					<div className="overflow-x-auto">
+						<table className="w-full border-collapse text-left">
+							{head && (
+								<thead>
+									<tr>
+										{head.map((cell, i) => (
+											<th
+												key={i}
+												className={`${edge(true, body.length === 0, i)} bg-brand px-4 py-3 text-base font-semibold text-black align-top ${INLINE}`}
+												dangerouslySetInnerHTML={{ __html: cell }}
+											/>
+										))}
+									</tr>
+								</thead>
+							)}
+							<tbody>
+								{body.map((row, r) => (
+									<tr key={r}>
+										{row.map((cell, c) => (
+											<td
+												key={c}
+												className={`${edge(!header && r === 0, r === body.length - 1, c)} px-4 py-3 text-base text-body align-top ${INLINE}`}
+												dangerouslySetInnerHTML={{ __html: cell }}
+											/>
+										))}
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			);
+		}
 		case "columns": {
 			return (
 				<div className="flex flex-col md:flex-row gap-4">
