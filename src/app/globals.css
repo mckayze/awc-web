@@ -17,6 +17,8 @@ html {
 	--color-brand-dark: #e2918a;
 	--color-background: #fef9f5;
 	--color-border: #ebdad5;
+	/* Category accent — used on category pills/links and their hover state. */
+	--color-accent: #bf3c2b;
 	--radius-base: 0px;
 
 	/* Typography scale — change sizes/line-heights here in one place.

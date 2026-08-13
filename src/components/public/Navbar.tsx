@@ -15,19 +15,36 @@ type NavLink = {
 type NavbarProps = {
 	leftLinks: NavLink[];
 	rightLinks: NavLink[];
+	categories?: string[];
 	logo?: React.ReactNode;
 };
 
-export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }: NavbarProps) {
+export function Navbar({
+	leftLinks,
+	rightLinks,
+	categories = [],
+	logo = "A Woman's Confidence",
+}: NavbarProps) {
 	const [open, setOpen] = useState(false);
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [visible, setVisible] = useState(true);
 	const [query, setQuery] = useState("");
+	const [navHeight, setNavHeight] = useState(0);
 	const navRef = useRef<HTMLElement>(null);
 	const lastScrollY = useRef(0);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const allLinks = [...leftLinks, ...rightLinks];
 	const router = useRouter();
+
+	// Keeps the spacer beneath the fixed nav in sync with its real height —
+	// which now varies (the category row only renders on desktop).
+	useEffect(() => {
+		const el = navRef.current;
+		if (!el) return;
+		const observer = new ResizeObserver(([entry]) => setNavHeight(entry.contentRect.height));
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, []);
 
 	function handleSearch() {
 		if (!query.trim()) return;
@@ -88,7 +105,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 		<>
 			<nav
 				ref={navRef}
-				className={`bg-background border-b border-border fixed top-0 left-0 right-0 z-40 py-4 transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"}`}
+				className={`bg-background border-b border-border fixed top-0 left-0 right-0 z-40 transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"}`}
 			>
 				<Container>
 					{/* Desktop layout */}
@@ -98,7 +115,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 								<Link
 									key={link.label}
 									href={link.href}
-									className="text-[20px] font-medium text-zinc-700 hover:text-body"
+									className="text-[20px] font-medium text-zinc-700 hover:text-accent"
 								>
 									{link.label}
 								</Link>
@@ -119,7 +136,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 									<button
 										key={link.label}
 										onClick={() => setSearchOpen(true)}
-										className="text-[20px] font-medium text-zinc-700 hover:text-body cursor-pointer"
+										className="text-[20px] font-medium text-zinc-700 hover:text-accent cursor-pointer"
 									>
 										{link.label}
 									</button>
@@ -127,7 +144,7 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 									<Link
 										key={link.label}
 										href={link.href}
-										className="text-[20px] font-medium text-zinc-700 hover:text-body"
+										className="text-[20px] font-medium text-zinc-700 hover:text-accent"
 									>
 										{link.label}
 									</Link>
@@ -168,6 +185,27 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 					</div>
 				</Container>
 
+				{/* Category bar — same nav element, so it hides/shows together with
+				    the rest. Desktop only; on mobile the same links are appended to
+				    the slide-out menu instead. */}
+				{categories.length > 0 && (
+					<div className="hidden md:block border-t border-border">
+						<Container>
+							<div className="flex flex-wrap items-center justify-center gap-x-8 py-3">
+								{categories.map((cat) => (
+									<Link
+										key={cat}
+										href="/blog"
+										className="text-sm font-bold uppercase tracking-wide text-zinc-700 hover:text-accent"
+									>
+										{cat}
+									</Link>
+								))}
+							</div>
+						</Container>
+					</div>
+				)}
+
 				{/* Mobile menu */}
 				{open &&
 					createPortal(
@@ -181,10 +219,20 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 										<Link
 											key={link.label}
 											href={link.href}
-											className="text-[28px] font-medium text-body hover:text-black py-3 border-b border-body/10 last:border-0"
+											className="text-[28px] font-medium text-body hover:text-accent py-3 border-b border-body/10 last:border-0"
 											onClick={() => setOpen(false)}
 										>
 											{link.label}
+										</Link>
+									))}
+									{categories.map((cat) => (
+										<Link
+											key={cat}
+											href="/blog"
+											className="text-[28px] font-medium uppercase text-body hover:text-accent py-3 border-b border-body/10 last:border-0"
+											onClick={() => setOpen(false)}
+										>
+											{cat}
 										</Link>
 									))}
 								</div>
@@ -193,6 +241,8 @@ export function Navbar({ leftLinks, rightLinks, logo = "A Woman's Confidence" }:
 						document.body,
 					)}
 			</nav>
+
+			<div style={{ height: navHeight }} />
 
 			{/* Search overlay */}
 			{searchOpen &&

@@ -5,7 +5,6 @@ import { SectionHeading } from "@/components/public/SectionHeading";
 import { FeaturedPostCard } from "@/components/public/FeaturedPostCard";
 import { SidePostCard } from "@/components/public/SidePostCard";
 import { TrendingPostCard } from "@/components/public/TrendingPostCard";
-import { CategoryScroller } from "@/components/public/CategoryScroller";
 import { MailingListCTA } from "@/components/public/MailingListCTA";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
@@ -127,13 +126,6 @@ export default function Home() {
 						</div>
 					</div>
 				</Container>
-			</Section>
-
-			<Section className="bg-brand border-b border-border">
-				<Container>
-					<SectionHeading title="Browse by Categories" />
-				</Container>
-				<CategoryScroller />
 			</Section>
 
 			<Section className="border-b border-border bg-white">

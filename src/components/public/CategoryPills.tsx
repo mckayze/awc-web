@@ -8,7 +8,7 @@ export function CategoryPills({ categories }: { categories: string[] }) {
 					{i > 0 && <span className="text-black/40">-</span>}
 					<Link
 						href="/blog"
-						className="text-xs sm:text-sm font-medium uppercase text-[#BF3C2B] hover:underline"
+						className="text-xs sm:text-sm font-medium uppercase text-accent hover:underline"
 					>
 						{cat}
 					</Link>

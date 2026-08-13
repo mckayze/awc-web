@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/public/Navbar";
 import { Footer } from "@/components/public/Footer";
 import { CookieBanner } from "@/components/public/CookieBanner";
+import { listPosts } from "@/lib/public/posts";
 
 // The public site's chrome — navbar, footer, cookie banner — as a component
 // rather than living directly in `(public)/layout.tsx`. Draft preview renders
@@ -39,11 +40,19 @@ const footerColumns = [
 	},
 ];
 
-export function PublicShell({ children }: { children: React.ReactNode }) {
+// Categories with their own nav entry (see leftLinks) don't need to repeat in
+// the category bar.
+const NAV_CATEGORIES = new Set(["makeup", "skincare", "lifestyle"]);
+
+export async function PublicShell({ children }: { children: React.ReactNode }) {
+	const posts = await listPosts();
+	const categories = Array.from(new Set(posts.flatMap((p) => p.categories)))
+		.filter((c) => !NAV_CATEGORIES.has(c.toLowerCase()))
+		.sort();
+
 	return (
 		<div className="min-h-screen flex flex-col">
-			<Navbar leftLinks={leftLinks} rightLinks={rightLinks} />
-			<div id="navbar-spacer" className="h-20" />
+			<Navbar leftLinks={leftLinks} rightLinks={rightLinks} categories={categories} />
 			<main className="flex-1">{children}</main>
 			<Footer columns={footerColumns} />
 			<CookieBanner />
