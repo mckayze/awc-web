@@ -26,7 +26,7 @@ export function SidePostCard({ post }: { post: PostSummary }) {
 			<div className="flex flex-col gap-5 flex-1 py-3 pr-3">
 				<CategoryPills categories={post.categories} />
 
-				<h3 className="text-2xl sm:text-4xl font-medium text-black leading-snug font-title">
+				<h3 className="text-2xl sm:text-4xl font-medium text-black leading-snug font-title line-clamp-2 min-h-[calc(2*1.375em)]">
 					<Link
 						href={href}
 						className="underline-offset-4 decoration-1 hover:underline focus-visible:underline group-has-[.card-media:hover]:underline"

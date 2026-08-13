@@ -8,18 +8,8 @@ import { TrendingPostCard } from "@/components/public/TrendingPostCard";
 import { MailingListCTA } from "@/components/public/MailingListCTA";
 import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
+import { listPosts } from "@/lib/public/posts";
 import type { PostSummary } from "@/lib/public/posts";
-
-const featuredPost: PostSummary = {
-	title: "Battle of the brands: Bullet lipsticks – Satin and matte formulas ranking",
-	slug: "skincare-routine",
-	categories: ["Skincare", "Lifestyle"],
-	date: "8th April, 2026",
-	excerpt:
-		"We tested over a dozen products to find the perfect morning routine for every skin type. From cleansers to SPF, here's what actually works and why simplicity is the key to glowing skin.",
-	// image_url:
-	//   "https://awomansconfidence.com/wp-content/uploads/2026/03/Battle-of-the-brands-bullet-lipsticks-1.png",
-};
 
 const trendingPosts: PostSummary[] = [
 	{
@@ -78,55 +68,34 @@ const trendingPosts: PostSummary[] = [
 	},
 ];
 
-const sidePosts: PostSummary[] = [
-	{
-		title: "The Best Foundations for Every Skin Tone",
-		slug: "best-foundations",
-		categories: ["Makeup"],
-		date: "5th April, 2026",
-		excerpt:
-			"Finding the right foundation shouldn't be a guessing game. We break down the top picks across every shade range and finish.",
-		image_url: "",
-	},
-	{
-		title: "Body Care Rituals Worth Adding to Your Week",
-		slug: "body-care-rituals",
-		categories: ["Body Care", "Lifestyle"],
-		date: "2nd April, 2026",
-		excerpt:
-			"From dry brushing to whipped body butters, these simple rituals make a real difference to how your skin looks and feels.",
-		image_url: "",
-	},
-	{
-		title: "Clean Beauty: What the Labels Actually Mean",
-		slug: "clean-beauty-labels",
-		categories: ["Skincare"],
-		date: "28th March, 2026",
-		excerpt:
-			"Natural, non-toxic, clean — the buzzwords are everywhere but the definitions are murky. Here's how to cut through the noise.",
-		image_url: "",
-	},
-];
+export const revalidate = 60;
 
-export default function Home() {
+export default async function Home() {
+	const posts = await listPosts();
+	// Left is the most recent post; the right column runs 2nd-most-recent at
+	// the top down to 4th-most-recent at the bottom.
+	const [featuredPost, ...sidePosts] = posts.slice(0, 4);
+
 	return (
 		<>
-			<Section className="border-b border-border bg-white">
-				<Container>
-					<div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-						<div>
-							<FeaturedPostCard post={featuredPost} />
+			{featuredPost && (
+				<Section className="border-b border-border bg-white">
+					<Container>
+						<div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+							<div>
+								<FeaturedPostCard post={featuredPost} />
+							</div>
+							<div className="flex flex-col gap-8">
+								{sidePosts.map((post) => (
+									<div key={post.slug} className="flex-1">
+										<SidePostCard post={post} />
+									</div>
+								))}
+							</div>
 						</div>
-						<div className="flex flex-col gap-8">
-							{sidePosts.map((post) => (
-								<div key={post.slug} className="flex-1">
-									<SidePostCard post={post} />
-								</div>
-							))}
-						</div>
-					</div>
-				</Container>
-			</Section>
+					</Container>
+				</Section>
+			)}
 
 			<Section className="border-b border-border bg-white">
 				<Container>
