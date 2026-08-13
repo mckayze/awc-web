@@ -4,8 +4,8 @@ Working list of upcoming work. Ordered loosely by area, not priority.
 
 ## Editor / content
 
-- [ ] **Tables in the block editor** — add a `table` block to `BlockEditor` and a matching renderer in `PostBody`. Needs a mobile story (real table on desktop, reflow to stacked cards under ~640px).
-- [ ] **Taller single images** — single (non-column) image blocks render too short. Check the Bobbi Brown dupe post for a real example and adjust the aspect ratio in `PostBody`.
+- [x] **Tables in the block editor** — add a `table` block to `BlockEditor` and a matching renderer in `PostBody`. Needs a mobile story (real table on desktop, reflow to stacked cards under ~640px).
+- [x] **Taller single images** — single (non-column) image blocks render too short. Check the Bobbi Brown dupe post for a real example and adjust the aspect ratio in `PostBody`.
 - [ ] **Published-at date** — let the author set the publish date explicitly in `PostForm`, rather than it being derived only from the visibility choice.
 
 ## Public site

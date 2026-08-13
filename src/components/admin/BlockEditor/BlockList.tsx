@@ -270,8 +270,8 @@ function BlockItem({
 }
 
 const HEADING_CLASS: Record<2 | 3 | 4, string> = {
-	2: "text-h2 font-title font-bold",
-	3: "text-h3 font-title font-bold",
+	2: "text-[2.25rem] font-title font-bold",
+	3: "text-h3 font-title font-bold opacity-90",
 	4: "text-xl font-title font-bold",
 };
 
