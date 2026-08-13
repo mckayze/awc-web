@@ -37,6 +37,7 @@ export function BlockEditor({
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [autoFocusId, setAutoFocusId] = useState<string | null>(null);
 	const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
+	const [activeTableCol, setActiveTableCol] = useState<number | null>(null);
 	const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({});
 	const [justCopied, setJustCopied] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
@@ -104,15 +105,17 @@ export function BlockEditor({
 			autoFocusId,
 			setAutoFocus: setAutoFocusId,
 			activeEditor,
-			focusBlock: (id, editor) => {
+			activeTableCol,
+			focusBlock: (id, editor, tableCol) => {
 				setSelectedId(id);
 				setActiveEditor(editor);
+				setActiveTableCol(tableCol ?? null);
 				setAutoFocusId(null);
 			},
 			resolveUrl: (mediaId) => mediaUrls[mediaId],
 			cacheUrl: (id, url) => setMediaUrls((prev) => ({ ...prev, [id]: url })),
 		}),
-		[selectedId, autoFocusId, activeEditor, mediaUrls],
+		[selectedId, autoFocusId, activeEditor, activeTableCol, mediaUrls],
 	);
 
 	return (

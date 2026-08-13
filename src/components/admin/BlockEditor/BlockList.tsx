@@ -33,6 +33,19 @@ function escapeHtml(s: string): string {
 	return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Sets one column's alignment, defaulting every other column to "left" the
+// first time a table gets an `align` array.
+function withAlign(
+	align: ("left" | "center" | "right")[] | undefined,
+	cols: number,
+	col: number,
+	value: "left" | "center" | "right",
+): ("left" | "center" | "right")[] {
+	const next = Array.from({ length: cols }, (_, i) => align?.[i] ?? "left");
+	next[col] = value;
+	return next;
+}
+
 // Renders one ordered list of blocks. Reused at the top level and inside every
 // column, so layout blocks are just nested BlockLists.
 export function BlockList({
@@ -212,6 +225,23 @@ function BlockItem({
 					onToggleHeader={(header) =>
 						block.type === "table" && onReplace({ ...block, data: { ...block.data, header } })
 					}
+					activeTableCol={ctx.activeTableCol}
+					onSetAlign={(align) =>
+						block.type === "table" &&
+						ctx.activeTableCol !== null &&
+						onReplace({
+							...block,
+							data: {
+								...block.data,
+								align: withAlign(
+									block.data.align,
+									block.data.rows[0]?.length ?? 0,
+									ctx.activeTableCol,
+									align,
+								),
+							},
+						})
+					}
 				/>
 			)}
 
@@ -265,7 +295,7 @@ function BlockBody({
 	onPasteSplit: (lines: string[]) => void;
 }) {
 	const ctx = useEditorCtx();
-	const onFocus = (editor: Editor) => ctx.focusBlock(block.id, editor);
+	const onFocus = (editor: Editor, tableCol?: number) => ctx.focusBlock(block.id, editor, tableCol);
 
 	switch (block.type) {
 		case "paragraph":
@@ -449,7 +479,7 @@ function TableBlock({
 }: {
 	block: Extract<Block, { type: "table" }>;
 	autoFocus: boolean;
-	onFocus: (editor: Editor) => void;
+	onFocus: (editor: Editor, tableCol?: number) => void;
 	onReplace: (next: Block) => void;
 	onRemove: () => void;
 }) {
@@ -551,6 +581,7 @@ function TableBlock({
 							<tr key={r} className="group/row">
 								{row.map((cell, c) => {
 									const isHead = header && r === 0;
+									const align = block.data.align?.[c] ?? "left";
 									return (
 										<td
 											key={c}
@@ -563,7 +594,9 @@ function TableBlock({
 												isHead && "bg-brand",
 												isHead && c === 0 && "rounded-tl-md",
 												isHead && c === cols - 1 && "rounded-tr-md",
-											)}
+												align === "center" && "text-center",
+												align === "right" && "text-right",
+										)}
 										>
 											{r === 0 && cols > 1 && (
 												<button
@@ -616,7 +649,7 @@ function TableBlock({
 												onChange={(html) => setCell(r, c, html)}
 												onFocus={(ed) => {
 													setFocusCell(null);
-													onFocus(ed);
+													onFocus(ed, c);
 												}}
 												onEnter={() => handleEnter(r, c)}
 												onBackspaceEmpty={() => handleBackspace(r, c)}
@@ -688,7 +721,7 @@ function ImageBlock({
 
 	// In a column, lock images to a fixed height so every image is identical
 	// regardless of column width (true WYSIWYG). Full-width images stay 16:9.
-	const boxClass = inColumn ? "h-[360px]" : "aspect-video";
+	const boxClass = inColumn ? "h-[360px]" : "aspect-[4/3]";
 
 	return (
 		<>

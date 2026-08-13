@@ -51,7 +51,7 @@ export function PostArticle({
 						</div>
 
 						{/* Right column — featured image */}
-						<div className="bg-nav rounded-md aspect-[16/9] w-full overflow-hidden">
+						<div className="bg-nav rounded-md aspect-[4/3] w-full overflow-hidden">
 							{post.image_url && (
 								// eslint-disable-next-line @next/next/no-img-element
 								<img

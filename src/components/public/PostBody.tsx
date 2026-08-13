@@ -103,7 +103,7 @@ function BlockView({
 			return (
 				<figure className="flex flex-col gap-3">
 					<div
-						className={`bg-nav rounded-md w-full overflow-hidden ${inColumn ? "h-[360px]" : "aspect-[16/9]"}`}
+						className={`bg-nav rounded-md w-full overflow-hidden ${inColumn ? "h-[360px]" : "aspect-[4/3]"}`}
 					>
 						{/* eslint-disable-next-line @next/next/no-img-element */}
 						<img src={url} alt={block.data.alt ?? ""} className="w-full h-full object-cover" />
@@ -169,7 +169,7 @@ function BlockView({
 			);
 		}
 		case "table": {
-			const { header, rows } = block.data;
+			const { header, rows, align } = block.data;
 			if (rows.length === 0 || rows.every((row) => row.every((cell) => !cell.trim()))) {
 				return null;
 			}
@@ -189,6 +189,10 @@ function BlockView({
 				]
 					.filter(Boolean)
 					.join(" ");
+			const alignClass = (c: number) => {
+				const a = align?.[c] ?? "left";
+				return a === "center" ? "text-center" : a === "right" ? "text-right" : "";
+			};
 			return (
 				<div className="overflow-hidden rounded-md border border-border">
 					<div className="overflow-x-auto">
@@ -199,7 +203,7 @@ function BlockView({
 										{head.map((cell, i) => (
 											<th
 												key={i}
-												className={`${edge(true, body.length === 0, i)} bg-brand px-4 py-3 text-base font-semibold text-black align-top ${INLINE}`}
+												className={`${edge(true, body.length === 0, i)} ${alignClass(i)} bg-brand px-4 py-3 text-base font-semibold text-black align-top ${INLINE}`}
 												dangerouslySetInnerHTML={{ __html: cell }}
 											/>
 										))}
@@ -212,7 +216,7 @@ function BlockView({
 										{row.map((cell, c) => (
 											<td
 												key={c}
-												className={`${edge(!header && r === 0, r === body.length - 1, c)} px-4 py-3 text-base text-body align-top ${INLINE}`}
+												className={`${edge(!header && r === 0, r === body.length - 1, c)} ${alignClass(c)} px-4 py-3 text-base text-body align-top ${INLINE}`}
 												dangerouslySetInnerHTML={{ __html: cell }}
 											/>
 										))}

@@ -12,7 +12,10 @@ export type EditorCtx = {
 	autoFocusId: string | null;
 	setAutoFocus: (id: string | null) => void;
 	activeEditor: Editor | null;
-	focusBlock: (id: string, editor: Editor) => void;
+	// Which column of a table block currently has focus, so the floating
+	// toolbar's alignment buttons know which column to act on.
+	activeTableCol: number | null;
+	focusBlock: (id: string, editor: Editor, tableCol?: number) => void;
 	resolveUrl: (mediaId: string) => string | undefined;
 	cacheUrl: (id: string, url: string) => void;
 };

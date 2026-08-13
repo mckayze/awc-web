@@ -4,6 +4,9 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Editor } from "@tiptap/react";
 import {
+	AlignCenter,
+	AlignLeft,
+	AlignRight,
 	ArrowUp,
 	ArrowDown,
 	Bold,
@@ -49,6 +52,8 @@ export function BlockToolbar({
 	onSetLevel,
 	onToggleOrdered,
 	onToggleHeader,
+	activeTableCol,
+	onSetAlign,
 }: {
 	block: Block;
 	editor: Editor | null;
@@ -60,6 +65,8 @@ export function BlockToolbar({
 	onSetLevel: (level: 2 | 3 | 4) => void;
 	onToggleOrdered: (ordered: boolean) => void;
 	onToggleHeader: (header: boolean) => void;
+	activeTableCol: number | null;
+	onSetAlign: (align: "left" | "center" | "right") => void;
 }) {
 	useEditorTick(editor);
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -185,6 +192,29 @@ export function BlockToolbar({
 					>
 						<PanelTop className="h-4 w-4" />
 					</ToolbarButton>
+				</>
+			)}
+
+			{/* Table column alignment — acts on whichever column has focus */}
+			{block.type === "table" && activeTableCol !== null && (
+				<>
+					<Divider />
+					{(
+						[
+							["left", AlignLeft, "Align left"],
+							["center", AlignCenter, "Align center"],
+							["right", AlignRight, "Align right"],
+						] as const
+					).map(([value, Icon, label]) => (
+						<ToolbarButton
+							key={value}
+							label={label}
+							active={(block.data.align?.[activeTableCol] ?? "left") === value}
+							onClick={() => onSetAlign(value)}
+						>
+							<Icon className="h-4 w-4" />
+						</ToolbarButton>
+					))}
 				</>
 			)}
 
