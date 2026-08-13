@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pill } from "@/components/ui/Pill";
+import { CategoryPills } from "@/components/public/CategoryPills";
 import type { PostSummary } from "@/lib/public/posts";
 
 export function FeaturedPostCard({ post }: { post: PostSummary }) {
@@ -24,12 +24,8 @@ export function FeaturedPostCard({ post }: { post: PostSummary }) {
 
 			{/* Content */}
 			<div className="flex flex-col gap-3 flex-1">
-				<div className="flex items-center justify-between gap-4">
-					<div className="flex flex-wrap gap-2">
-						{post.categories.map((cat) => (
-							<Pill key={cat} label={cat} />
-						))}
-					</div>
+				<div className="flex flex-col gap-1">
+					<CategoryPills categories={post.categories} />
 					<p className="text-sm text-body shrink-0">{post.date}</p>
 				</div>
 

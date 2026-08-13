@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pill } from "@/components/ui/Pill";
+import { CategoryPills } from "@/components/public/CategoryPills";
 import type { PostSummary } from "@/lib/public/posts";
 
 export function SidePostCard({ post }: { post: PostSummary }) {
@@ -24,11 +24,7 @@ export function SidePostCard({ post }: { post: PostSummary }) {
 
 			{/* Content */}
 			<div className="flex flex-col gap-5 flex-1 py-3 pr-3">
-				<div className="flex flex-wrap gap-2">
-					{post.categories.map((cat) => (
-						<Pill key={cat} label={cat} />
-					))}
-				</div>
+				<CategoryPills categories={post.categories} />
 
 				<h3 className="text-2xl sm:text-4xl font-medium text-black leading-snug font-title">
 					<Link

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Pill } from "@/components/ui/Pill";
+import { CategoryPills } from "@/components/public/CategoryPills";
 import type { PostSummary } from "@/lib/public/posts";
 
 export function BlogCard({ post }: { post: PostSummary }) {
@@ -15,12 +15,8 @@ export function BlogCard({ post }: { post: PostSummary }) {
 
 			<div className="flex flex-col justify-between gap-8">
 				<div className="flex flex-col gap-3">
-					<div className="flex items-center justify-between gap-4">
-						<div className="flex flex-wrap gap-2">
-							{post.categories.map((cat) => (
-								<Pill key={cat} label={cat} color="bg-brand" />
-							))}
-						</div>
+					<div className="flex flex-col gap-1">
+						<CategoryPills categories={post.categories} />
 						<p className="text-sm text-body shrink-0">{post.date}</p>
 					</div>
 

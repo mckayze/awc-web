@@ -201,7 +201,7 @@ export function BlogIndex({
 											<button
 												onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
 												disabled={currentPage === 1}
-												className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
+												className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border rounded-md text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
 											>
 												<ArrowLeft size={18} />
 												Previous
@@ -220,7 +220,7 @@ export function BlogIndex({
 														<button
 															key={item}
 															onClick={() => setCurrentPage(item)}
-															className={`w-10 h-10 flex items-center justify-center text-sm font-medium border border-border transition-colors ${
+															className={`w-10 h-10 flex items-center justify-center text-sm font-medium border border-border rounded-md transition-colors ${
 																item === currentPage
 																	? "bg-black text-white cursor-default"
 																	: "bg-white text-body hover:text-black cursor-pointer"
@@ -235,7 +235,7 @@ export function BlogIndex({
 											<button
 												onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
 												disabled={currentPage === totalPages}
-												className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
+												className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border rounded-md text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
 											>
 												Next
 												<ArrowRight size={18} />

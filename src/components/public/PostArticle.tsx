@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Section } from "@/components/public/Section";
 import { Container } from "@/components/public/Container";
-import { Pill } from "@/components/ui/Pill";
+import { CategoryPills } from "@/components/public/CategoryPills";
 import { NewsletterBar } from "@/components/public/NewsletterBar";
 import { TrendingPostCard } from "@/components/public/TrendingPostCard";
 import { PostBody } from "@/components/public/PostBody";
@@ -36,18 +36,13 @@ export function PostArticle({
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 						{/* Left column */}
 						<div className="flex flex-col gap-6">
-							<div className="flex items-center justify-between">
-								<div className="flex flex-wrap gap-2">
-									{post.categories.map((cat) => (
-										<Pill key={cat} label={cat} />
-									))}
-								</div>
-								<span className="text-sm text-body/60">{post.date}</span>
-							</div>
+							<CategoryPills categories={post.categories} />
 
 							<h1 className="text-4xl md:text-5xl font-bold text-black leading-tight">
 								{post.title}
 							</h1>
+
+							<span className="text-sm text-body/60">{post.date}</span>
 						</div>
 
 						{/* Right column — featured image */}
