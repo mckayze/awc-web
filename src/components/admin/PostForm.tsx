@@ -88,6 +88,12 @@ export function PostForm({
 	const [visibility, setVisibility] = useState<Visibility>(initialVisibility);
 	const [scheduledAt, setScheduledAt] = useState(isoToLocalInput(initial.publishedAt ?? null));
 
+	// Draft → Published/Scheduled with no date picked yet: default to now.
+	function handleVisibilityChange(v: Visibility) {
+		setVisibility(v);
+		if (v !== "draft" && !scheduledAt) setScheduledAt(isoToLocalInput(new Date().toISOString()));
+	}
+
 	const [featuredId, setFeaturedId] = useState<string | null>(initial.featuredImageId ?? null);
 	const [featuredUrl, setFeaturedUrl] = useState<string | null>(initial.featuredImageUrl ?? null);
 	const [pickerOpen, setPickerOpen] = useState(false);
@@ -109,19 +115,14 @@ export function PostForm({
 	function handleSubmit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 
-		// Map visibility → (status, published_at).
+		// Map visibility → (status, published_at). Published and scheduled are
+		// the same underlying state (status "published" + a date); the date
+		// field is directly editable in both, defaulting to now if untouched.
 		let status: PostStatus = "draft";
 		let publishedAt: string | null = null;
-		if (visibility === "published") {
+		if (visibility === "published" || visibility === "scheduled") {
 			status = "published";
-			// Keep the original date when editing an already-live post, but a
-			// future one (left over from a schedule) would keep it hidden.
-			const prior = initial.publishedAt;
-			publishedAt =
-				prior && new Date(prior) <= new Date() ? prior : new Date().toISOString();
-		} else if (visibility === "scheduled") {
-			status = "published";
-			publishedAt = localInputToIso(scheduledAt);
+			publishedAt = localInputToIso(scheduledAt) ?? new Date().toISOString();
 		}
 
 		onSubmit({
@@ -187,26 +188,28 @@ export function PostForm({
 							label="Draft"
 							value="draft"
 							current={visibility}
-							onChange={setVisibility}
+							onChange={handleVisibilityChange}
 						/>
 						<VisibilityOption
 							label="Published"
 							value="published"
 							current={visibility}
-							onChange={setVisibility}
+							onChange={handleVisibilityChange}
 							disabled={!canPublish}
 						/>
 						<VisibilityOption
 							label="Scheduled"
 							value="scheduled"
 							current={visibility}
-							onChange={setVisibility}
+							onChange={handleVisibilityChange}
 							disabled={!canPublish}
 						/>
 					</div>
-					{visibility === "scheduled" && (
+					{visibility !== "draft" && (
 						<div className="mt-3">
-							<label className="text-caption text-body/60 block">Publish at</label>
+							<label className="text-caption text-body/60 block">
+								{visibility === "scheduled" ? "Publish at" : "Published at"}
+							</label>
 							<div className="mt-1">
 								<DateTimePicker value={scheduledAt} onChange={setScheduledAt} />
 							</div>
