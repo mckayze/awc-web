@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo, useEffect, useCallback, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Section } from "@/components/public/Section";
 import { Container } from "@/components/public/Container";
@@ -52,15 +52,30 @@ function buildPageItems(current: number, total: number, delta = 2): (number | ".
 	return items;
 }
 
-// Reports the navbar's `?q=` up into BlogIndex state. Kept as its own leaf
-// component because `useSearchParams` opts its subtree out of prerendering —
-// isolating it here means the post list itself still renders into the static
-// HTML that gets cached, rather than being replaced by a Suspense fallback.
-function QuerySync({ onChange }: { onChange: (q: string) => void }) {
-	const q = useSearchParams().get("q") ?? "";
+// Reports the navbar's `?q=` and the current `?page=` up into BlogIndex
+// state. Kept as its own leaf component because `useSearchParams` opts its
+// subtree out of prerendering — isolating it here means the post list itself
+// still renders into the static HTML that gets cached, rather than being
+// replaced by a Suspense fallback.
+function QuerySync({
+	onQueryChange,
+	onPageChange,
+}: {
+	onQueryChange: (q: string) => void;
+	onPageChange: (page: number) => void;
+}) {
+	const searchParams = useSearchParams();
+	const q = searchParams.get("q") ?? "";
+	const page = Math.max(1, Number(searchParams.get("page")) || 1);
+
 	useEffect(() => {
-		onChange(q);
-	}, [q, onChange]);
+		onQueryChange(q);
+	}, [q, onQueryChange]);
+
+	useEffect(() => {
+		onPageChange(page);
+	}, [page, onPageChange]);
+
 	return null;
 }
 
@@ -71,10 +86,32 @@ export function BlogIndex({
 	posts: PostSummary[];
 	categories: string[];
 }) {
+	const router = useRouter();
 	const [activeCategories, setActiveCategories] = useState<string[]>([]);
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [query, setQuery] = useState("");
+
+	// Lets the stable syncPageToUrl/goToPage callbacks read the latest query
+	// without depending on `query` (which would otherwise force new callback
+	// identities on every keystroke).
+	const queryRef = useRef(query);
+	queryRef.current = query;
+
+	// Reflects `page` (and, on filter-clearing, `q`) into the URL without
+	// pushing a new history entry — pagination shouldn't make every page click
+	// its own back-button stop, but it does mean a real page reload or a
+	// return from a post detail page lands back on the page the user was on.
+	const syncPageToUrl = useCallback(
+		(page: number, q: string) => {
+			const params = new URLSearchParams();
+			if (q.trim()) params.set("q", q.trim());
+			if (page > 1) params.set("page", String(page));
+			const search = params.toString();
+			router.replace(`/blog${search ? `?${search}` : ""}`, { scroll: false });
+		},
+		[router],
+	);
 
 	// Re-seed the box and reset paging when arriving with a new ?q= from the
 	// navbar search while already on this page (the component stays mounted).
@@ -82,6 +119,24 @@ export function BlogIndex({
 		setQuery(q);
 		setCurrentPage(1);
 	}, []);
+
+	// The URL is the source of truth for the current page (so browser back/
+	// forward and page reloads land on the right page); this just mirrors it
+	// into state without touching scroll position.
+	const handlePageFromUrl = useCallback((page: number) => {
+		setCurrentPage(page);
+	}, []);
+
+	// User-initiated page change (pagination controls): update state + URL and
+	// jump to the top of the results.
+	const goToPage = useCallback(
+		(page: number) => {
+			setCurrentPage(page);
+			syncPageToUrl(page, queryRef.current);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		},
+		[syncPageToUrl],
+	);
 
 	const terms = useMemo(() => query.trim().toLowerCase().split(/\s+/).filter(Boolean), [query]);
 
@@ -104,15 +159,26 @@ export function BlogIndex({
 	const totalPages = Math.ceil(results.length / POSTS_PER_PAGE);
 	const paginated = results.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
 
+	// Filtering/searching can shrink the result set out from under the page
+	// the URL points at (e.g. arriving at ?page=4 then clearing a filter) —
+	// clamp back onto the last real page rather than showing an empty grid.
+	useEffect(() => {
+		if (totalPages > 0 && currentPage > totalPages) {
+			setCurrentPage(totalPages);
+			syncPageToUrl(totalPages, queryRef.current);
+		}
+	}, [currentPage, totalPages, syncPageToUrl]);
+
 	function handleApply(selected: string[]) {
 		setActiveCategories(selected);
 		setCurrentPage(1);
+		syncPageToUrl(1, queryRef.current);
 	}
 
 	return (
 		<>
 			<Suspense fallback={null}>
-				<QuerySync onChange={handleQueryFromUrl} />
+				<QuerySync onQueryChange={handleQueryFromUrl} onPageChange={handlePageFromUrl} />
 			</Suspense>
 			<FilterDrawer
 				open={drawerOpen}
@@ -142,6 +208,7 @@ export function BlogIndex({
 								onChange={(e) => {
 									setQuery(e.target.value);
 									setCurrentPage(1);
+									syncPageToUrl(1, e.target.value);
 								}}
 								placeholder="Search posts..."
 								className="w-full bg-white border border-black rounded-md pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
@@ -159,8 +226,10 @@ export function BlogIndex({
 							<Button
 								variant="dark"
 								onClick={() => {
-									handleApply([]);
+									setActiveCategories([]);
 									setQuery("");
+									setCurrentPage(1);
+									syncPageToUrl(1, "");
 								}}
 								leftIcon={<Trash2 size={15} />}
 								className="shrink-0"
@@ -199,7 +268,7 @@ export function BlogIndex({
 											className={`flex justify-between items-center ${delta === 0 ? "flex md:hidden" : "hidden md:flex"}`}
 										>
 											<button
-												onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+												onClick={() => goToPage(Math.max(1, currentPage - 1))}
 												disabled={currentPage === 1}
 												className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border rounded-md text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
 											>
@@ -219,7 +288,7 @@ export function BlogIndex({
 													) : (
 														<button
 															key={item}
-															onClick={() => setCurrentPage(item)}
+															onClick={() => goToPage(item)}
 															className={`w-10 h-10 flex items-center justify-center text-sm font-medium border border-border rounded-md transition-colors ${
 																item === currentPage
 																	? "bg-black text-white cursor-default"
@@ -233,7 +302,7 @@ export function BlogIndex({
 											</div>
 
 											<button
-												onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+												onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
 												disabled={currentPage === totalPages}
 												className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border rounded-md text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
 											>
