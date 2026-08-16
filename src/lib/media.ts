@@ -112,6 +112,49 @@ export async function listMedia(): Promise<MediaItem[]> {
 	return ((data as MediaRow[]) ?? []).map(mapRow);
 }
 
+export type ListMediaPageParams = {
+	search?: string;
+	page: number;
+	pageSize: number;
+	/** Restrict to one kind (matched via mime_type) — the picker only wants images. */
+	kind?: MediaKind;
+};
+
+// Paginated + server-searched variant of listMedia(), for grids that scroll
+// to load more instead of fetching the whole library up front.
+export async function listMediaPage({
+	search,
+	page,
+	pageSize,
+	kind,
+}: ListMediaPageParams): Promise<{ items: MediaItem[]; total: number }> {
+	let q = supabaseBrowser()
+		.from("media")
+		.select(ROW_SELECT, { count: "exact" })
+		.order("created_at", { ascending: false });
+
+	if (kind) q = q.ilike("mime_type", `${kind}/%`);
+
+	const trimmed = search?.trim();
+	if (trimmed) q = q.or(`internal_name.ilike.%${trimmed}%,canonical_name.ilike.%${trimmed}%`);
+
+	const from = (page - 1) * pageSize;
+	const { data, error, count } = await q.range(from, from + pageSize - 1);
+	if (error) throw new Error(error.message);
+	return { items: ((data as MediaRow[]) ?? []).map(mapRow), total: count ?? 0 };
+}
+
+// Fetches only the given media rows — used by the block editor to resolve
+// image URLs for a post's own content, so it isn't subject to PostgREST's
+// default row cap the way a full listMedia() scan would be once the media
+// table grows past it.
+export async function getMediaByIds(ids: string[]): Promise<MediaItem[]> {
+	if (ids.length === 0) return [];
+	const { data, error } = await supabaseBrowser().from("media").select(ROW_SELECT).in("id", ids);
+	if (error) throw new Error(error.message);
+	return ((data as MediaRow[]) ?? []).map(mapRow);
+}
+
 // Fetches a single media item — used to edit an image already placed in a post,
 // where only its id is stored.
 export async function getMedia(id: string): Promise<MediaItem> {

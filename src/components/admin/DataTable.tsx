@@ -21,7 +21,24 @@ export type Column<T> = {
 	cellClassName?: string;
 };
 
-type SortState = { key: string; dir: "asc" | "desc" } | null;
+export type SortState = { key: string; dir: "asc" | "desc" } | null;
+
+/**
+ * Hands control of search/sort/pagination to the caller: DataTable renders
+ * `data` as-is (already the current page/query/sort result from the server)
+ * instead of filtering/sorting/slicing it client-side. Omit for the default
+ * client-side mode, which is fine for small, fully-loaded datasets.
+ */
+export type ServerTableConfig = {
+	query: string;
+	onQueryChange: (query: string) => void;
+	sort: SortState;
+	onSortChange: (sort: SortState) => void;
+	page: number;
+	totalPages: number;
+	onPageChange: (page: number) => void;
+	loading?: boolean;
+};
 
 type DataTableProps<T> = {
 	columns: Column<T>[];
@@ -34,6 +51,7 @@ type DataTableProps<T> = {
 	emptyMessage?: string;
 	/** Column + direction the table is sorted by on first render. */
 	defaultSort?: { key: string; dir: "asc" | "desc" };
+	server?: ServerTableConfig;
 };
 
 /**
@@ -65,28 +83,34 @@ export function DataTable<T>({
 	pageSize = 10,
 	emptyMessage = "Nothing to show.",
 	defaultSort,
+	server,
 }: DataTableProps<T>) {
-	const [query, setQuery] = useState("");
-	const [sort, setSort] = useState<SortState>(defaultSort ?? null);
-	const [currentPage, setCurrentPage] = useState(1);
+	const [localQuery, setLocalQuery] = useState("");
+	const [localSort, setLocalSort] = useState<SortState>(defaultSort ?? null);
+	const [localPage, setLocalPage] = useState(1);
 
-	const searchable_ = searchable && columns.some((c) => c.searchBy);
+	const query = server ? server.query : localQuery;
+	const sort = server ? server.sort : localSort;
+
+	const searchable_ = searchable && (server ? true : columns.some((c) => c.searchBy));
 
 	const filtered = useMemo(() => {
-		const q = query.trim().toLowerCase();
+		if (server) return data;
+		const q = localQuery.trim().toLowerCase();
 		if (!q) return data;
 		const searchers = columns
 			.map((c) => c.searchBy)
 			.filter((fn): fn is (row: T) => string => Boolean(fn));
 		return data.filter((row) => searchers.some((fn) => fn(row).toLowerCase().includes(q)));
-	}, [data, columns, query]);
+	}, [server, data, columns, localQuery]);
 
 	const sorted = useMemo(() => {
-		if (!sort) return filtered;
-		const col = columns.find((c) => c.key === sort.key);
+		if (server) return data;
+		if (!localSort) return filtered;
+		const col = columns.find((c) => c.key === localSort.key);
 		if (!col?.sortBy) return filtered;
 		const sortBy = col.sortBy;
-		const dir = sort.dir === "asc" ? 1 : -1;
+		const dir = localSort.dir === "asc" ? 1 : -1;
 		return [...filtered].sort((a, b) => {
 			const av = sortBy(a);
 			const bv = sortBy(b);
@@ -94,20 +118,44 @@ export function DataTable<T>({
 			if (av > bv) return 1 * dir;
 			return 0;
 		});
-	}, [filtered, columns, sort]);
+	}, [server, filtered, columns, localSort, data]);
 
-	const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-	const safePage = Math.min(currentPage, totalPages);
+	const totalPages = server ? server.totalPages : Math.max(1, Math.ceil(sorted.length / pageSize));
+	const safePage = server ? server.page : Math.min(localPage, totalPages);
 	const start = (safePage - 1) * pageSize;
-	const rows = sorted.slice(start, start + pageSize);
+	const rows = server ? data : sorted.slice(start, start + pageSize);
 
 	function toggleSort(key: string) {
-		setCurrentPage(1);
-		setSort((prev) => {
+		if (server) {
+			const prev = server.sort;
+			server.onSortChange(
+				!prev || prev.key !== key
+					? { key, dir: "asc" }
+					: prev.dir === "asc"
+						? { key, dir: "desc" }
+						: null,
+			);
+			return;
+		}
+		setLocalPage(1);
+		setLocalSort((prev) => {
 			if (!prev || prev.key !== key) return { key, dir: "asc" };
 			if (prev.dir === "asc") return { key, dir: "desc" };
 			return null;
 		});
+	}
+
+	function setQuery(q: string) {
+		if (server) server.onQueryChange(q);
+		else {
+			setLocalQuery(q);
+			setLocalPage(1);
+		}
+	}
+
+	function setPage(p: number) {
+		if (server) server.onPageChange(p);
+		else setLocalPage(p);
 	}
 
 	return (
@@ -121,10 +169,7 @@ export function DataTable<T>({
 					<Input
 						type="search"
 						value={query}
-						onChange={(e) => {
-							setQuery(e.target.value);
-							setCurrentPage(1);
-						}}
+						onChange={(e) => setQuery(e.target.value)}
 						placeholder={searchPlaceholder}
 						className="pl-9"
 						aria-label="Search table"
@@ -132,7 +177,12 @@ export function DataTable<T>({
 				</div>
 			)}
 
-			<div className="border-border rounded-base overflow-x-auto border bg-white">
+			<div
+				className={twMerge(
+					"border-border rounded-base overflow-x-auto border bg-white",
+					server?.loading && "opacity-50",
+				)}
+			>
 				<table className="w-full text-left text-sm">
 					<thead className="border-border border-b">
 						<tr>
@@ -203,7 +253,7 @@ export function DataTable<T>({
 							className={`flex justify-between items-center ${delta === 0 ? "flex md:hidden" : "hidden md:flex"}`}
 						>
 							<button
-								onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+								onClick={() => setPage(Math.max(1, safePage - 1))}
 								disabled={safePage === 1}
 								className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
 							>
@@ -223,7 +273,7 @@ export function DataTable<T>({
 									) : (
 										<button
 											key={item}
-											onClick={() => setCurrentPage(item)}
+											onClick={() => setPage(item)}
 											className={`w-10 h-10 flex items-center justify-center text-sm font-medium border border-border ${
 												item === safePage
 													? "bg-black text-white cursor-default transition-colors"
@@ -237,7 +287,7 @@ export function DataTable<T>({
 							</div>
 
 							<button
-								onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+								onClick={() => setPage(Math.min(totalPages, safePage + 1))}
 								disabled={safePage === totalPages}
 								className="h-10 px-4 flex items-center gap-2 text-sm font-medium bg-white border border-border text-body hover:text-black transition-colors disabled:opacity-30 disabled:cursor-default cursor-pointer"
 							>

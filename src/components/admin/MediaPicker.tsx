@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { Search, X, Check, Plus, Upload } from "lucide-react";
-import { listMedia, uploadImage, deleteMedia } from "@/lib/media";
+import { listMediaPage, uploadImage, deleteMedia } from "@/lib/media";
 import type { MediaItem } from "@/lib/media";
 import { Thumb } from "@/components/admin/MediaCard";
 import { Heading } from "@/components/ui/Heading";
 import { Button } from "@/components/ui/Button";
 import { MediaDetails } from "@/components/admin/MediaDetails";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
+
+const PAGE_SIZE = 60;
 
 // Reuses the media library in "pick one" mode, with upload and inline detail
 // editing. Only images are listed — that's all the picker is used for (featured
@@ -23,21 +25,74 @@ export function MediaPicker({
 	onClose: () => void;
 }) {
 	const [items, setItems] = useState<MediaItem[]>([]);
+	const [total, setTotal] = useState(0);
+	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [query, setQuery] = useState("");
+	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [activeId, setActiveId] = useState<string | null>(null);
 	const [uploading, setUploading] = useState(false);
 	const [dragging, setDragging] = useState(false);
 	const [confirmIds, setConfirmIds] = useState<string[] | null>(null);
 	const [deleting, setDeleting] = useState(false);
 	const fileInput = useRef<HTMLInputElement>(null);
+	const sentinelRef = useRef<HTMLDivElement>(null);
+	const scrollRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		listMedia()
-			.then((all) => setItems(all.filter((it) => it.kind === "image")))
+		const t = setTimeout(() => setDebouncedQuery(query), 300);
+		return () => clearTimeout(t);
+	}, [query]);
+
+	// Search (or the initial mount) restarts from page 1.
+	useEffect(() => {
+		let cancelled = false;
+		setLoading(true);
+		listMediaPage({ search: debouncedQuery, page: 1, pageSize: PAGE_SIZE, kind: "image" })
+			.then(({ items, total }) => {
+				if (cancelled) return;
+				setItems(items);
+				setTotal(total);
+				setPage(1);
+				setError(null);
+			})
+			.catch((e: Error) => !cancelled && setError(e.message))
+			.finally(() => !cancelled && setLoading(false));
+		return () => {
+			cancelled = true;
+		};
+	}, [debouncedQuery]);
+
+	// Fires loadMoreRef.current() so the observer below can stay mounted once
+	// without recreating it (and thus losing scroll position) every fetch.
+	const loadMoreRef = useRef<() => void>(() => {});
+	loadMoreRef.current = () => {
+		if (loading || loadingMore || items.length >= total) return;
+		const next = page + 1;
+		setLoadingMore(true);
+		listMediaPage({ search: debouncedQuery, page: next, pageSize: PAGE_SIZE, kind: "image" })
+			.then(({ items: more }) => {
+				setItems((prev) => [...prev, ...more]);
+				setPage(next);
+			})
 			.catch((e: Error) => setError(e.message))
-			.finally(() => setLoading(false));
+			.finally(() => setLoadingMore(false));
+	};
+
+	useEffect(() => {
+		const sentinel = sentinelRef.current;
+		const root = scrollRef.current;
+		if (!sentinel || !root) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) loadMoreRef.current();
+			},
+			{ root, rootMargin: "200px" },
+		);
+		observer.observe(sentinel);
+		return () => observer.disconnect();
 	}, []);
 
 	useEffect(() => {
@@ -48,16 +103,6 @@ export function MediaPicker({
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
 	}, [onClose, confirmIds]);
-
-	const visible = useMemo(() => {
-		const q = query.trim().toLowerCase();
-		if (!q) return items;
-		return items.filter(
-			(it) =>
-				it.internalName.toLowerCase().includes(q) ||
-				it.canonicalName.toLowerCase().includes(q),
-		);
-	}, [items, query]);
 
 	const active = items.find((it) => it.id === activeId) ?? null;
 
@@ -77,6 +122,7 @@ export function MediaPicker({
 		try {
 			const added = await Promise.all(images.map(uploadImage));
 			setItems((prev) => [...added, ...prev]);
+			setTotal((prev) => prev + added.length);
 			setActiveId(added[0].id);
 		} catch (e) {
 			setError((e as Error).message);
@@ -104,6 +150,7 @@ export function MediaPicker({
 		try {
 			await deleteMedia(ids);
 			setItems((cur) => cur.filter((it) => !ids.includes(it.id)));
+			setTotal((prev) => prev - ids.length);
 			if (activeId && ids.includes(activeId)) setActiveId(null);
 			setConfirmIds(null);
 		} catch (e) {
@@ -189,7 +236,7 @@ export function MediaPicker({
 							</div>
 						</div>
 
-						<div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+						<div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
 							{error && (
 								<div className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 									{error}
@@ -197,13 +244,13 @@ export function MediaPicker({
 							)}
 							{loading ? (
 								<div className="text-body/50 py-16 text-center text-sm">Loading…</div>
-							) : visible.length === 0 ? (
+							) : items.length === 0 ? (
 								<div className="text-body/50 py-16 text-center text-sm">
 									No images found. Use Upload to add one.
 								</div>
 							) : (
 								<div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-									{visible.map((item) => {
+									{items.map((item) => {
 										const selected = item.id === activeId;
 										return (
 											<button
@@ -236,6 +283,9 @@ export function MediaPicker({
 									})}
 								</div>
 							)}
+							<div ref={sentinelRef} className="text-body/50 py-6 text-center text-sm">
+								{loadingMore ? "Loading more…" : ""}
+							</div>
 						</div>
 					</div>
 

@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Image as ImageIcon } from "lucide-react";
-import { listPosts, postState } from "@/lib/posts";
+import { listPostsPage, postState } from "@/lib/posts";
 import type { Post, PostState } from "@/lib/posts";
 import { usePermissions } from "@/lib/permissions";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { DataTable } from "@/components/admin/DataTable";
-import type { Column } from "@/components/admin/DataTable";
+import type { Column, SortState } from "@/components/admin/DataTable";
 
 const STATE_STYLES: Record<PostState, { label: string; color: string }> = {
 	draft: { label: "Draft", color: "bg-white" },
@@ -22,19 +22,48 @@ function postDate(p: Post) {
 	return p.publishedAt ?? p.createdAt;
 }
 
+const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 300;
+
 export default function AllPosts() {
 	const { has, hasAny } = usePermissions();
 	const router = useRouter();
+
 	const [posts, setPosts] = useState<Post[]>([]);
+	const [total, setTotal] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
+	const [rawQuery, setRawQuery] = useState("");
+	const [query, setQuery] = useState("");
+	const [sort, setSort] = useState<SortState>({ key: "date", dir: "desc" });
+	const [page, setPage] = useState(1);
+
 	useEffect(() => {
-		listPosts()
-			.then(setPosts)
-			.catch((e: Error) => setError(e.message))
-			.finally(() => setLoading(false));
-	}, []);
+		const t = setTimeout(() => setQuery(rawQuery), SEARCH_DEBOUNCE_MS);
+		return () => clearTimeout(t);
+	}, [rawQuery]);
+
+	useEffect(() => {
+		setPage(1);
+	}, [query, sort]);
+
+	useEffect(() => {
+		let cancelled = false;
+		setLoading(true);
+		listPostsPage({ search: query, page, pageSize: PAGE_SIZE, sort })
+			.then(({ posts, total }) => {
+				if (cancelled) return;
+				setPosts(posts);
+				setTotal(total);
+				setError(null);
+			})
+			.catch((e: Error) => !cancelled && setError(e.message))
+			.finally(() => !cancelled && setLoading(false));
+		return () => {
+			cancelled = true;
+		};
+	}, [query, sort, page]);
 
 	const canEdit = hasAny("posts.edit");
 
@@ -60,7 +89,6 @@ export default function AllPosts() {
 				header: "Title",
 				cell: (p) => p.title,
 				sortBy: (p) => p.title.toLowerCase(),
-				searchBy: (p) => p.title,
 			},
 			{
 				key: "status",
@@ -76,7 +104,6 @@ export default function AllPosts() {
 				header: "Author",
 				cell: (p) => p.authorName,
 				sortBy: (p) => p.authorName.toLowerCase(),
-				searchBy: (p) => p.authorName,
 				cellClassName: "text-body/70",
 			},
 			{
@@ -92,7 +119,6 @@ export default function AllPosts() {
 					) : (
 						"—"
 					),
-				searchBy: (p) => p.categories.map((c) => c.name).join(" "),
 			},
 			{
 				key: "date",
@@ -136,23 +162,31 @@ export default function AllPosts() {
 				)}
 			</div>
 
-			{loading && <p className="text-body/60 mt-6 text-sm">Loading…</p>}
-
 			{error && (
 				<p className="mt-6 text-sm text-red-600" role="alert">
 					{error}
 				</p>
 			)}
 
-			{!loading && !error && (
+			{!error && (
 				<div className="mt-6">
 					<DataTable
 						columns={columns}
 						data={posts}
 						rowKey={(p) => p.id}
-						defaultSort={{ key: "date", dir: "desc" }}
+						pageSize={PAGE_SIZE}
 						searchPlaceholder="Search posts…"
 						emptyMessage="No posts yet."
+						server={{
+							query: rawQuery,
+							onQueryChange: setRawQuery,
+							sort,
+							onSortChange: setSort,
+							page,
+							totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+							onPageChange: setPage,
+							loading,
+						}}
 					/>
 				</div>
 			)}

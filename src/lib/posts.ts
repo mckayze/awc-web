@@ -111,6 +111,62 @@ export async function listPosts(): Promise<Post[]> {
 	return ((data as unknown as PostRow[]) ?? []).map(mapRow);
 }
 
+export type PostSort = { key: string; dir: "asc" | "desc" };
+
+export type ListPostsPageParams = {
+	/** Matched against title only (ilike) — server-side, unlike the admin
+	 * table's old client-side search which also matched author/category. */
+	search?: string;
+	page: number;
+	pageSize: number;
+	sort?: PostSort | null;
+};
+
+// Paginated + server-searched/sorted variant of listPosts(), for the admin
+// table now that there are hundreds of posts and loading them all up front
+// to filter client-side doesn't scale.
+export async function listPostsPage({
+	search,
+	page,
+	pageSize,
+	sort,
+}: ListPostsPageParams): Promise<{ posts: Post[]; total: number }> {
+	let q = supabaseBrowser().from("posts").select(LIST_SELECT, { count: "exact" });
+
+	const trimmed = search?.trim();
+	if (trimmed) q = q.ilike("title", `%${trimmed}%`);
+
+	// "status" and "date" are approximations of the client-facing derived
+	// values (postState() folds a future published_at into "scheduled", and
+	// the table's date column is publishedAt ?? createdAt) — replicating
+	// those exactly would need a raw SQL expression, not worth it here.
+	switch (sort?.key) {
+		case "title":
+			q = q.order("title", { ascending: sort.dir === "asc" });
+			break;
+		case "status":
+			q = q
+				.order("status", { ascending: sort.dir === "asc" })
+				.order("published_at", { ascending: sort.dir === "asc", nullsFirst: false });
+			break;
+		case "author":
+			q = q.order("author(full_name)", { ascending: sort.dir === "asc" });
+			break;
+		case "date":
+			q = q
+				.order("published_at", { ascending: sort.dir === "asc", nullsFirst: false })
+				.order("created_at", { ascending: sort.dir === "asc" });
+			break;
+		default:
+			q = q.order("created_at", { ascending: false });
+	}
+
+	const from = (page - 1) * pageSize;
+	const { data, error, count } = await q.range(from, from + pageSize - 1);
+	if (error) throw new Error(error.message);
+	return { posts: ((data as unknown as PostRow[]) ?? []).map(mapRow), total: count ?? 0 };
+}
+
 // Published posts matching a title search, for pickers that can't afford to
 // load the full post list (e.g. once there are hundreds of posts).
 export async function searchPosts(query: string, limit = 20): Promise<Post[]> {

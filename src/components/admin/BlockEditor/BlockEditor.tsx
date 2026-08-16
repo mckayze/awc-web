@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { Copy, ClipboardPaste, Check } from "lucide-react";
 import type { Block, PostContent } from "@/lib/posts";
-import { listMedia } from "@/lib/media";
+import { getMediaByIds } from "@/lib/media";
 import { BlockList } from "./BlockList";
 import { EditorProvider } from "./context";
 import type { EditorCtx } from "./context";
@@ -79,10 +79,10 @@ export function BlockEditor({
 	// Resolve URLs for any image blocks loaded from a saved post (incl. nested).
 	const mediaKey = collectMediaIds(value.blocks).join(",");
 	useEffect(() => {
-		const missing = mediaKey.split(",").some((id) => id && !mediaUrls[id]);
-		if (!missing) return;
+		const ids = mediaKey.split(",").filter((id) => id && !mediaUrls[id]);
+		if (ids.length === 0) return;
 		let cancelled = false;
-		listMedia()
+		getMediaByIds(ids)
 			.then((items) => {
 				if (cancelled) return;
 				setMediaUrls((prev) => {

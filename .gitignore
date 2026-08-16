@@ -51,3 +51,6 @@ next-env.d.ts
 
 
 !.dev.vars.example
+
+# WP import working state — scraped content, not code
+/scripts/.wp-import-state.json

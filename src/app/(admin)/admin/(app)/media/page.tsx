@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { Plus, Upload, Search, LayoutGrid, List, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -8,17 +8,23 @@ import { Heading } from "@/components/ui/Heading";
 import { MediaCard, Thumb } from "@/components/admin/MediaCard";
 import { MediaEditModal } from "@/components/admin/MediaEditModal";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
-import { formatBytes, formatDate, listMedia, uploadImage, deleteMedia } from "@/lib/media";
+import { formatBytes, formatDate, listMediaPage, uploadImage, deleteMedia } from "@/lib/media";
 import type { MediaItem } from "@/lib/media";
+
+const PAGE_SIZE = 60;
 
 // ── Page ───────────────────────────────────────────────────────────
 
 export default function Media() {
 	const [items, setItems] = useState<MediaItem[]>([]);
+	const [total, setTotal] = useState(0);
+	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
 	const [uploading, setUploading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [query, setQuery] = useState("");
+	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [view, setView] = useState<"grid" | "list">("grid");
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [activeId, setActiveId] = useState<string | null>(null);
@@ -28,21 +34,69 @@ export default function Media() {
 	const fileInput = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		listMedia()
-			.then(setItems)
+		const t = setTimeout(() => setDebouncedQuery(query), 300);
+		return () => clearTimeout(t);
+	}, [query]);
+
+	// Search (or the initial mount) restarts from page 1.
+	useEffect(() => {
+		let cancelled = false;
+		setLoading(true);
+		listMediaPage({ search: debouncedQuery, page: 1, pageSize: PAGE_SIZE })
+			.then(({ items, total }) => {
+				if (cancelled) return;
+				setItems(items);
+				setTotal(total);
+				setPage(1);
+				setError(null);
+			})
+			.catch((e: Error) => !cancelled && setError(e.message))
+			.finally(() => !cancelled && setLoading(false));
+		return () => {
+			cancelled = true;
+		};
+	}, [debouncedQuery]);
+
+	// Fires loadMoreRef.current() so the observer below can stay mounted once
+	// without recreating it every fetch.
+	const loadMoreRef = useRef<() => void>(() => {});
+	loadMoreRef.current = () => {
+		if (loading || loadingMore || items.length >= total) return;
+		const next = page + 1;
+		setLoadingMore(true);
+		listMediaPage({ search: debouncedQuery, page: next, pageSize: PAGE_SIZE })
+			.then(({ items: more }) => {
+				setItems((prev) => [...prev, ...more]);
+				setPage(next);
+			})
 			.catch((e: Error) => setError(e.message))
-			.finally(() => setLoading(false));
+			.finally(() => setLoadingMore(false));
+	};
+
+	// The page itself scrolls (no inner scroll container). A plain scroll
+	// listener is more robust here than IntersectionObserver: it re-checks on
+	// every scroll tick rather than only firing on enter/exit transitions.
+	function checkScroll() {
+		const scrolledToBottom =
+			window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 600;
+		if (scrolledToBottom) loadMoreRef.current();
+	}
+	const checkScrollRef = useRef(checkScroll);
+	checkScrollRef.current = checkScroll;
+
+	useEffect(() => {
+		function onScroll() {
+			checkScrollRef.current();
+		}
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
 	}, []);
 
-	const visible = useMemo(() => {
-		const q = query.trim().toLowerCase();
-		if (!q) return items;
-		return items.filter(
-			(it) =>
-				it.internalName.toLowerCase().includes(q) ||
-				it.canonicalName.toLowerCase().includes(q),
-		);
-	}, [items, query]);
+	// Re-check after every load: if a page of results doesn't fill the
+	// viewport, no scroll event will ever fire to pull in the next one.
+	useEffect(() => {
+		if (!loading) checkScrollRef.current();
+	}, [loading, items.length]);
 
 	const active = items.find((it) => it.id === activeId) ?? null;
 
@@ -75,6 +129,7 @@ export default function Media() {
 		try {
 			const added = await Promise.all(images.map(uploadImage));
 			setItems((prev) => [...added, ...prev]);
+			setTotal((prev) => prev + added.length);
 		} catch (e) {
 			setError((e as Error).message);
 		} finally {
@@ -105,6 +160,7 @@ export default function Media() {
 		try {
 			await deleteMedia(ids);
 			setItems((cur) => cur.filter((it) => !ids.includes(it.id)));
+			setTotal((prev) => prev - ids.length);
 			setSelected((cur) => {
 				const next = new Set(cur);
 				ids.forEach((id) => next.delete(id));
@@ -226,14 +282,18 @@ export default function Media() {
 				<div className="border-border text-body/50 mt-6 border border-dashed px-4 py-16 text-center text-sm">
 					Loading…
 				</div>
-			) : visible.length === 0 ? (
+			) : items.length === 0 ? (
 				<div className="border-border text-body/50 mt-6 border border-dashed px-4 py-16 text-center text-sm">
 					No media found.
 				</div>
 			) : view === "grid" ? (
-				<MediaGrid items={visible} selected={selected} onToggle={toggleSelect} onOpen={setActiveId} />
+				<MediaGrid items={items} selected={selected} onToggle={toggleSelect} onOpen={setActiveId} />
 			) : (
-				<MediaListView items={visible} selected={selected} onToggle={toggleSelect} onOpen={setActiveId} />
+				<MediaListView items={items} selected={selected} onToggle={toggleSelect} onOpen={setActiveId} />
+			)}
+
+			{loadingMore && (
+				<div className="text-body/50 py-6 text-center text-sm">Loading more…</div>
 			)}
 
 			{/* Drag overlay */}
