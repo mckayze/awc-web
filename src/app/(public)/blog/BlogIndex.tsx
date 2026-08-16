@@ -326,7 +326,7 @@ export function BlogIndex({
 															onClick={() => goToPage(item)}
 															className={`w-10 h-10 flex items-center justify-center text-sm font-medium border border-border rounded-md transition-colors ${
 																item === currentPage
-																	? "bg-black text-white cursor-default"
+																	? "bg-brand text-black cursor-default"
 																	: "bg-white text-body hover:text-black cursor-pointer"
 															}`}
 														>
