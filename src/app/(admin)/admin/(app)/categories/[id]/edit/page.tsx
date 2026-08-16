@@ -4,14 +4,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { ArrowLeft } from "lucide-react";
-import { deleteCategory, getCategoryById, slugify, updateCategory } from "@/lib/categories";
-import type { Category } from "@/lib/categories";
+import { ArrowLeft, X } from "lucide-react";
+import {
+	deleteCategory,
+	getCategoryById,
+	listEditorsPicks,
+	setEditorsPicks,
+	slugify,
+	updateCategory,
+} from "@/lib/categories";
+import type { Category, EditorsPick } from "@/lib/categories";
 import { usePermissions } from "@/lib/permissions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Text } from "@/components/ui/Text";
+import { PostPicker } from "@/components/admin/PostPicker";
 
 export default function EditCategory() {
 	const { id } = useParams<{ id: string }>();
@@ -24,12 +32,16 @@ export default function EditCategory() {
 	const [submitting, setSubmitting] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 
+	const [picks, setPicks] = useState<EditorsPick[]>([]);
+	const [pickerOpen, setPickerOpen] = useState(false);
+
 	useEffect(() => {
 		if (!id) return;
-		getCategoryById(id)
-			.then((c) => {
+		Promise.all([getCategoryById(id), listEditorsPicks(id)])
+			.then(([c, editorsPicks]) => {
 				setCategory(c);
 				setSlug(c?.slug ?? "");
+				setPicks(editorsPicks);
 			})
 			.catch((e: Error) => setError(e.message))
 			.finally(() => setLoading(false));
@@ -48,6 +60,10 @@ export default function EditCategory() {
 				slug: slug.trim(),
 				description: String(form.get("description") ?? "").trim() || null,
 			});
+			await setEditorsPicks(
+				id,
+				picks.map((p) => p.id),
+			);
 			router.push("/admin/categories");
 		} catch (err) {
 			setError((err as Error).message);
@@ -108,6 +124,43 @@ export default function EditCategory() {
 					defaultValue={category.description ?? ""}
 				/>
 
+				<div>
+					<label className="text-sm font-medium text-black">Editor's Picks</label>
+					<p className="text-body/60 mt-1 text-xs">
+						Featured posts shown under "Editor's Picks" on this category's page.
+					</p>
+
+					{picks.length > 0 && (
+						<ul className="mt-3 space-y-1.5">
+							{picks.map((pick) => (
+								<li
+									key={pick.id}
+									className="border-border flex items-center justify-between gap-2 border bg-white px-3 py-2 text-sm"
+								>
+									<span className="truncate">{pick.title}</span>
+									<button
+										type="button"
+										aria-label="Remove"
+										onClick={() => setPicks((cur) => cur.filter((p) => p.id !== pick.id))}
+										className="text-body/50 hover:text-body shrink-0"
+									>
+										<X className="h-4 w-4" />
+									</button>
+								</li>
+							))}
+						</ul>
+					)}
+
+					<Button
+						type="button"
+						variant="outline"
+						className="mt-3 min-h-9 px-4 text-sm"
+						onClick={() => setPickerOpen(true)}
+					>
+						{picks.length > 0 ? "Change posts…" : "Choose posts…"}
+					</Button>
+				</div>
+
 				{error && (
 					<Text variant="caption" className="text-red-600" role="alert">
 						{error}
@@ -131,6 +184,10 @@ export default function EditCategory() {
 						{deleting ? "Deleting…" : "Delete category"}
 					</button>
 				</div>
+			)}
+
+			{pickerOpen && (
+				<PostPicker selected={picks} onChange={setPicks} onClose={() => setPickerOpen(false)} />
 			)}
 		</section>
 	);

@@ -81,7 +81,7 @@ export function CategoryPage({
 			{/* Editor's Picks */}
 			<Section className="bg-white border-b border-border">
 				<Container>
-					<SectionHeading title="Editor's Picks" action={<ViewAllLink />} />
+					<SectionHeading title="Editor's Picks" />
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
 						{editorsPicks.map((post) => (
 							<TrendingPostCard key={post.slug} post={post} />

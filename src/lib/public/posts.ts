@@ -89,6 +89,14 @@ export async function listPosts(): Promise<PostSummary[]> {
 	return ((data as SummaryRpc[]) ?? []).map(mapSummary);
 }
 
+export async function getEditorsPicks(categorySlug: string): Promise<PostSummary[]> {
+	const { data, error } = await supabasePublic.rpc("get_editors_picks", {
+		p_category_slug: categorySlug,
+	});
+	if (error) throw new Error(error.message);
+	return ((data as SummaryRpc[]) ?? []).map(mapSummary);
+}
+
 export async function getPostBySlug(slug: string): Promise<FullPost | null> {
 	const { data, error } = await supabasePublic.rpc("get_published_post", {
 		p_slug: slug,

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
-import { listPosts } from "@/lib/public/posts";
-import type { PostSummary } from "@/lib/public/posts";
+import { getEditorsPicks, listPosts } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
 	title: "Skincare | A Woman's Confidence",
@@ -19,40 +18,10 @@ const products: Product[] = [
 	{ brand: "SkinCeuticals", name: "C E Ferulic Serum", href: "/" },
 ];
 
-const editorsPicks: PostSummary[] = [
-	{
-		title: "The Truth About Retinol: Myths vs. Facts",
-		slug: "retinol-myths-facts",
-		categories: ["Skincare"],
-		date: "14th March, 2026",
-		excerpt:
-			"Retinol is one of the most talked-about skincare ingredients — and one of the most misunderstood. Let's set the record straight.",
-		image_url: "",
-	},
-	{
-		title: "The Case for a Minimal Skincare Routine",
-		slug: "minimal-skincare-routine",
-		categories: ["Skincare"],
-		date: "23rd March, 2026",
-		excerpt:
-			"More steps doesn't mean better skin. We break down a streamlined routine that still covers all the bases.",
-		image_url: "",
-	},
-	{
-		title: "The Gut-Skin Connection: What the Research Says",
-		slug: "gut-skin-connection",
-		categories: ["Skincare", "Wellness"],
-		date: "17th March, 2026",
-		excerpt:
-			"Your gut health and your complexion are more linked than you might think. Here's what the science actually supports.",
-		image_url: "",
-	},
-];
-
 export const revalidate = 60;
 
 export default async function SkincarePage() {
-	const posts = await listPosts();
+	const [posts, editorsPicks] = await Promise.all([listPosts(), getEditorsPicks("skincare")]);
 	const categoryPosts = posts.filter((p) => p.categories.includes("Skincare"));
 	const [featuredPost, ...sidePosts] = categoryPosts.slice(0, 4);
 	const latestPosts = categoryPosts.slice(4, 7);

@@ -111,6 +111,24 @@ export async function listPosts(): Promise<Post[]> {
 	return ((data as unknown as PostRow[]) ?? []).map(mapRow);
 }
 
+// Published posts matching a title search, for pickers that can't afford to
+// load the full post list (e.g. once there are hundreds of posts).
+export async function searchPosts(query: string, limit = 20): Promise<Post[]> {
+	let q = supabaseBrowser()
+		.from("posts")
+		.select(LIST_SELECT)
+		.eq("status", "published")
+		.order("title")
+		.limit(limit);
+
+	const trimmed = query.trim();
+	if (trimmed) q = q.ilike("title", `%${trimmed}%`);
+
+	const { data, error } = await q;
+	if (error) throw new Error(error.message);
+	return ((data as unknown as PostRow[]) ?? []).map(mapRow);
+}
+
 export async function getPostById(id: string): Promise<Post | null> {
 	const { data, error } = await supabaseBrowser()
 		.from("posts")
