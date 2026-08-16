@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
+import { listPosts } from "@/lib/public/posts";
 import type { PostSummary } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
@@ -17,36 +18,6 @@ const products: Product[] = [
 	{ brand: "Casper", name: "Reverie Sleep Spray", href: "/" },
 	{ brand: "Aromatherapy Associates", name: "Deep Relax Bath Oil", href: "/" },
 	{ brand: "Therabody", name: "TheraFace Mask", href: "/" },
-];
-
-const latestPosts: PostSummary[] = [
-	{
-		title: "Morning Supplements Worth Adding to Your Routine",
-		slug: "morning-supplements",
-		categories: ["Wellness", "Lifestyle"],
-		date: "31st March, 2026",
-		excerpt:
-			"From collagen to adaptogens, we break down which supplements are backed by evidence and which are just hype.",
-		image_url: "",
-	},
-	{
-		title: "Body Care Rituals Worth Adding to Your Week",
-		slug: "body-care-rituals",
-		categories: ["Body Care", "Lifestyle"],
-		date: "2nd April, 2026",
-		excerpt:
-			"From dry brushing to whipped body butters, these simple rituals make a real difference to how your skin looks and feels.",
-		image_url: "",
-	},
-	{
-		title: "Journaling for Mental Wellness: Where to Start",
-		slug: "journaling-mental-wellness",
-		categories: ["Wellness", "Lifestyle"],
-		date: "21st March, 2026",
-		excerpt:
-			"Putting pen to paper is one of the most underrated wellness tools. Here's a simple framework to make it stick.",
-		image_url: "",
-	},
 ];
 
 const editorsPicks: PostSummary[] = [
@@ -79,12 +50,21 @@ const editorsPicks: PostSummary[] = [
 	},
 ];
 
-export default function LifestylePage() {
+export const revalidate = 60;
+
+export default async function LifestylePage() {
+	const posts = await listPosts();
+	const categoryPosts = posts.filter((p) => p.categories.includes("Lifestyle"));
+	const [featuredPost, ...sidePosts] = categoryPosts.slice(0, 4);
+	const latestPosts = categoryPosts.slice(4, 7);
+
 	return (
 		<CategoryPage
 			category="Lifestyle"
 			tagline="The rituals, habits, and products that make everyday life feel a little better."
 			products={products}
+			featuredPost={featuredPost}
+			sidePosts={sidePosts}
 			latestPosts={latestPosts}
 			editorsPicks={editorsPicks}
 		/>

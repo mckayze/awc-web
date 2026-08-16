@@ -85,11 +85,9 @@ export default async function Home() {
 							<div>
 								<FeaturedPostCard post={featuredPost} />
 							</div>
-							<div className="flex flex-col gap-8">
+							<div className="grid grid-rows-3 gap-8">
 								{sidePosts.map((post) => (
-									<div key={post.slug} className="flex-1">
-										<SidePostCard post={post} />
-									</div>
+									<SidePostCard key={post.slug} post={post} />
 								))}
 							</div>
 						</div>

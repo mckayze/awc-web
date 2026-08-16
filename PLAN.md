@@ -14,7 +14,7 @@ Working list of upcoming work. Ordered loosely by area, not priority.
 - [x] **Filter by categories button** — reposition on the all-posts page (`BlogIndex`).
 - [ ] **White body background** — make the body background white across the app.
 - [ ] **Remove "My Favourite Products" lists** — drop the product scroller sections from the makeup / skincare / lifestyle category pages.
-- [ ] **Categories submenu** — add a nav submenu listing all categories (Glamour-style), then remove the categories block from the homepage.
+- [x] **Categories submenu** — add a nav submenu listing all categories (Glamour-style), then remove the categories block from the homepage.
 - [x] **Headings on blog post** — h2 needs to be made slightly larger to distinguish itself from h3
 - [ ] **Blog page pagination** — Blog pages need to be paginated via URL also? so when a user navigates back it saves their state maybe?
 

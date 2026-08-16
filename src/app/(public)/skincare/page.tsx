@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
+import { listPosts } from "@/lib/public/posts";
 import type { PostSummary } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
@@ -16,36 +17,6 @@ const products: Product[] = [
 	{ brand: "Drunk Elephant", name: "C-Firma Fresh Day Serum", href: "/" },
 	{ brand: "Tatcha", name: "The Water Cream", href: "/" },
 	{ brand: "SkinCeuticals", name: "C E Ferulic Serum", href: "/" },
-];
-
-const latestPosts: PostSummary[] = [
-	{
-		title: "SPF Myths Debunked: What Dermatologists Actually Say",
-		slug: "spf-myths-debunked",
-		categories: ["Skincare"],
-		date: "6th April, 2026",
-		excerpt:
-			"From 'you don't need it indoors' to 'darker skin tones are protected', we're busting the most common SPF misconceptions.",
-		image_url: "",
-	},
-	{
-		title: "Clean Beauty: What the Labels Actually Mean",
-		slug: "clean-beauty-labels",
-		categories: ["Skincare"],
-		date: "28th March, 2026",
-		excerpt:
-			"Natural, non-toxic, clean — the buzzwords are everywhere but the definitions are murky. Here's how to cut through the noise.",
-		image_url: "",
-	},
-	{
-		title: "The Best Eye Creams for Dark Circles and Puffiness",
-		slug: "best-eye-creams",
-		categories: ["Skincare"],
-		date: "27th March, 2026",
-		excerpt:
-			"Tired eyes meet their match. We tested the top eye creams to see which ones actually deliver on their promises.",
-		image_url: "",
-	},
 ];
 
 const editorsPicks: PostSummary[] = [
@@ -78,12 +49,21 @@ const editorsPicks: PostSummary[] = [
 	},
 ];
 
-export default function SkincarePage() {
+export const revalidate = 60;
+
+export default async function SkincarePage() {
+	const posts = await listPosts();
+	const categoryPosts = posts.filter((p) => p.categories.includes("Skincare"));
+	const [featuredPost, ...sidePosts] = categoryPosts.slice(0, 4);
+	const latestPosts = categoryPosts.slice(4, 7);
+
 	return (
 		<CategoryPage
 			category="Skincare"
 			tagline="Science-backed picks and no-nonsense guides for every skin type."
 			products={products}
+			featuredPost={featuredPost}
+			sidePosts={sidePosts}
 			latestPosts={latestPosts}
 			editorsPicks={editorsPicks}
 		/>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryPage } from "@/components/public/CategoryPage";
 import type { Product } from "@/components/public/ProductCard";
+import { listPosts } from "@/lib/public/posts";
 import type { PostSummary } from "@/lib/public/posts";
 
 export const metadata: Metadata = {
@@ -16,36 +17,6 @@ const products: Product[] = [
 	{ brand: "Dior", name: "Diorshow Iconic Overcurl Mascara", href: "/" },
 	{ brand: "Armani Beauty", name: "Luminous Silk Foundation", href: "/" },
 	{ brand: "Hourglass", name: "Ambient Lighting Powder", href: "/" },
-];
-
-const latestPosts: PostSummary[] = [
-	{
-		title: "Battle of the Brands: Bullet Lipsticks – Satin and Matte Formulas Ranked",
-		slug: "bullet-lipsticks-ranked",
-		categories: ["Makeup"],
-		date: "8th April, 2026",
-		excerpt:
-			"We tested over a dozen bullet lipsticks to find the best satin and matte formulas across every price point.",
-		image_url: "",
-	},
-	{
-		title: "The Lip Liner Renaissance: Why Everyone's Obsessed Again",
-		slug: "lip-liner-renaissance",
-		categories: ["Makeup"],
-		date: "7th April, 2026",
-		excerpt:
-			"Lip liners have made a full comeback — and not just for overdrawn lips. Here's how to use them to transform any look.",
-		image_url: "",
-	},
-	{
-		title: "Blush Placement Tricks That Work for Every Face Shape",
-		slug: "blush-placement-tricks",
-		categories: ["Makeup"],
-		date: "29th March, 2026",
-		excerpt:
-			"Forget the one-size-fits-all approach. These placement techniques are tailored to your actual bone structure.",
-		image_url: "",
-	},
 ];
 
 const editorsPicks: PostSummary[] = [
@@ -78,12 +49,21 @@ const editorsPicks: PostSummary[] = [
 	},
 ];
 
-export default function MakeupPage() {
+export const revalidate = 60;
+
+export default async function MakeupPage() {
+	const posts = await listPosts();
+	const categoryPosts = posts.filter((p) => p.categories.includes("Makeup"));
+	const [featuredPost, ...sidePosts] = categoryPosts.slice(0, 4);
+	const latestPosts = categoryPosts.slice(4, 7);
+
 	return (
 		<CategoryPage
 			category="Makeup"
 			tagline="Honest reviews, tutorials, and the products actually worth your money."
 			products={products}
+			featuredPost={featuredPost}
+			sidePosts={sidePosts}
 			latestPosts={latestPosts}
 			editorsPicks={editorsPicks}
 		/>
