@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Menu, X } from "lucide-react";
 import { Container } from "./Container";
+import { slugify } from "@/lib/slug";
 
 type NavLink = {
 	label: string;
@@ -195,7 +196,7 @@ export function Navbar({
 								{categories.map((cat) => (
 									<Link
 										key={cat}
-										href="/blog"
+										href={`/blog?category=${slugify(cat)}`}
 										className="text-sm font-bold uppercase tracking-wide text-zinc-700 hover:text-accent"
 									>
 										{cat}
@@ -228,7 +229,7 @@ export function Navbar({
 									{categories.map((cat) => (
 										<Link
 											key={cat}
-											href="/blog"
+											href={`/blog?category=${slugify(cat)}`}
 											className="text-[28px] font-medium uppercase text-body hover:text-accent py-3 border-b border-body/10 last:border-0"
 											onClick={() => setOpen(false)}
 										>

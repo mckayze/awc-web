@@ -6,12 +6,12 @@ Working list of upcoming work. Ordered loosely by area, not priority.
 
 - [x] **Tables in the block editor** — add a `table` block to `BlockEditor` and a matching renderer in `PostBody`. Needs a mobile story (real table on desktop, reflow to stacked cards under ~640px).
 - [x] **Taller single images** — single (non-column) image blocks render too short. Check the Bobbi Brown dupe post for a real example and adjust the aspect ratio in `PostBody`.
-- [ ] **Published-at date** — let the author set the publish date explicitly in `PostForm`, rather than it being derived only from the visibility choice.
+- [x] **Published-at date** — let the author set the publish date explicitly in `PostForm`, rather than it being derived only from the visibility choice.
 
 ## Public site
 
 - [ ] **About page** — needs a significant rewrite/redesign, not a tweak.
-- [ ] **Filter by categories button** — reposition on the all-posts page (`BlogIndex`).
+- [x] **Filter by categories button** — reposition on the all-posts page (`BlogIndex`).
 - [ ] **White body background** — make the body background white across the app.
 - [ ] **Remove "My Favourite Products" lists** — drop the product scroller sections from the makeup / skincare / lifestyle category pages.
 - [ ] **Categories submenu** — add a nav submenu listing all categories (Glamour-style), then remove the categories block from the homepage.

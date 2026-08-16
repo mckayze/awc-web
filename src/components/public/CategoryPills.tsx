@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { slugify } from "@/lib/slug";
 
 export function CategoryPills({ categories }: { categories: string[] }) {
 	return (
@@ -7,7 +8,7 @@ export function CategoryPills({ categories }: { categories: string[] }) {
 				<span key={cat} className="flex items-center gap-1">
 					{i > 0 && <span className="text-black/40">-</span>}
 					<Link
-						href="/blog"
+						href={`/blog?category=${slugify(cat)}`}
 						className="text-xs sm:text-sm font-medium uppercase text-accent hover:underline"
 					>
 						{cat}

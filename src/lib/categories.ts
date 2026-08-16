@@ -1,5 +1,7 @@
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
+export { slugify } from "@/lib/slug";
+
 export type Category = {
 	id: string;
 	name: string;
@@ -8,26 +10,19 @@ export type Category = {
 	created_by: string | null;
 	created_at: string;
 	updated_at: string;
-	/** Number of posts using this category. 0 until posts + the
-	 * post_categories join table exist (see listCategories). */
 	post_count: number;
 };
 
-/** Lowercase, hyphenated, alphanumeric slug derived from a name. */
-export function slugify(value: string): string {
-	return value
-		.toLowerCase()
-		.trim()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "");
-}
-
 export async function listCategories(): Promise<Category[]> {
-	// TODO(posts): once the post_categories join table exists, swap the select
-	// for `*, post_count:post_categories(count)` to get a live count per row.
-	const { data, error } = await supabaseBrowser().from("categories").select("*").order("name");
+	const { data, error } = await supabaseBrowser()
+		.from("categories")
+		.select("*, post_categories(count)")
+		.order("name");
 	if (error) throw new Error(error.message);
-	return (data ?? []).map((c) => ({ ...c, post_count: 0 }));
+	return (data ?? []).map(({ post_categories, ...c }) => ({
+		...c,
+		post_count: (post_categories as { count: number }[])[0]?.count ?? 0,
+	}));
 }
 
 export async function getCategoryById(id: string): Promise<Category | null> {

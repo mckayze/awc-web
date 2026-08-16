@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { MailingListCTA } from "@/components/public/MailingListCTA";
 import { Separator } from "@/components/public/Separator";
 import type { PostSummary } from "@/lib/public/posts";
+import { slugify } from "@/lib/slug";
 
 const POSTS_PER_PAGE = 6;
 
@@ -59,18 +60,29 @@ function buildPageItems(current: number, total: number, delta = 2): (number | ".
 // replaced by a Suspense fallback.
 function QuerySync({
 	onQueryChange,
+	onCategoriesChange,
 	onPageChange,
 }: {
 	onQueryChange: (q: string) => void;
+	onCategoriesChange: (categories: string[]) => void;
 	onPageChange: (page: number) => void;
 }) {
 	const searchParams = useSearchParams();
 	const q = searchParams.get("q") ?? "";
+	const categoryParam = searchParams.get("category") ?? "";
 	const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
 	useEffect(() => {
 		onQueryChange(q);
 	}, [q, onQueryChange]);
+
+	useEffect(() => {
+		const slugs = categoryParam
+			.split(",")
+			.map((c) => c.trim())
+			.filter(Boolean);
+		onCategoriesChange(slugs);
+	}, [categoryParam, onCategoriesChange]);
 
 	useEffect(() => {
 		onPageChange(page);
@@ -98,14 +110,20 @@ export function BlogIndex({
 	const queryRef = useRef(query);
 	queryRef.current = query;
 
-	// Reflects `page` (and, on filter-clearing, `q`) into the URL without
-	// pushing a new history entry — pagination shouldn't make every page click
-	// its own back-button stop, but it does mean a real page reload or a
-	// return from a post detail page lands back on the page the user was on.
+	const categoriesRef = useRef(activeCategories);
+	categoriesRef.current = activeCategories;
+
+	// Reflects `page`, `q`, and `category` into the URL without pushing a new
+	// history entry — pagination shouldn't make every page click its own
+	// back-button stop, but it does mean a real page reload or a return from a
+	// post detail page lands back on the page the user was on. Categories are
+	// stored as their display names in state but written as slugs, matching
+	// the links in Navbar/CategoryPills.
 	const syncPageToUrl = useCallback(
-		(page: number, q: string) => {
+		(page: number, q: string, categories: string[]) => {
 			const params = new URLSearchParams();
 			if (q.trim()) params.set("q", q.trim());
+			if (categories.length > 0) params.set("category", categories.map(slugify).join(","));
 			if (page > 1) params.set("page", String(page));
 			const search = params.toString();
 			router.replace(`/blog${search ? `?${search}` : ""}`, { scroll: false });
@@ -120,6 +138,19 @@ export function BlogIndex({
 		setCurrentPage(1);
 	}, []);
 
+	// Re-seed the active category filters and reset paging when arriving with
+	// a new ?category= (a slug list) from a category link (navbar, pills)
+	// while already on this page. Resolved against the known category names
+	// since post filtering matches on name, not slug.
+	const handleCategoriesFromUrl = useCallback(
+		(slugs: string[]) => {
+			const matched = categories.filter((c) => slugs.includes(slugify(c)));
+			setActiveCategories(matched);
+			setCurrentPage(1);
+		},
+		[categories],
+	);
+
 	// The URL is the source of truth for the current page (so browser back/
 	// forward and page reloads land on the right page); this just mirrors it
 	// into state without touching scroll position.
@@ -132,7 +163,7 @@ export function BlogIndex({
 	const goToPage = useCallback(
 		(page: number) => {
 			setCurrentPage(page);
-			syncPageToUrl(page, queryRef.current);
+			syncPageToUrl(page, queryRef.current, categoriesRef.current);
 			window.scrollTo({ top: 0, behavior: "smooth" });
 		},
 		[syncPageToUrl],
@@ -165,20 +196,24 @@ export function BlogIndex({
 	useEffect(() => {
 		if (totalPages > 0 && currentPage > totalPages) {
 			setCurrentPage(totalPages);
-			syncPageToUrl(totalPages, queryRef.current);
+			syncPageToUrl(totalPages, queryRef.current, categoriesRef.current);
 		}
 	}, [currentPage, totalPages, syncPageToUrl]);
 
 	function handleApply(selected: string[]) {
 		setActiveCategories(selected);
 		setCurrentPage(1);
-		syncPageToUrl(1, queryRef.current);
+		syncPageToUrl(1, queryRef.current, selected);
 	}
 
 	return (
 		<>
 			<Suspense fallback={null}>
-				<QuerySync onQueryChange={handleQueryFromUrl} onPageChange={handlePageFromUrl} />
+				<QuerySync
+					onQueryChange={handleQueryFromUrl}
+					onCategoriesChange={handleCategoriesFromUrl}
+					onPageChange={handlePageFromUrl}
+				/>
 			</Suspense>
 			<FilterDrawer
 				open={drawerOpen}
@@ -208,7 +243,7 @@ export function BlogIndex({
 								onChange={(e) => {
 									setQuery(e.target.value);
 									setCurrentPage(1);
-									syncPageToUrl(1, e.target.value);
+									syncPageToUrl(1, e.target.value, categoriesRef.current);
 								}}
 								placeholder="Search posts..."
 								className="w-full bg-white border border-black rounded-md pl-11 pr-4 h-11 text-sm text-body placeholder:text-body/40 focus:outline-none focus:border-body/40"
@@ -229,7 +264,7 @@ export function BlogIndex({
 									setActiveCategories([]);
 									setQuery("");
 									setCurrentPage(1);
-									syncPageToUrl(1, "");
+									syncPageToUrl(1, "", []);
 								}}
 								leftIcon={<Trash2 size={15} />}
 								className="shrink-0"
