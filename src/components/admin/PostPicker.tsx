@@ -19,10 +19,12 @@ export function PostPicker({
 	selected,
 	onChange,
 	onClose,
+	categoryId,
 }: {
 	selected: EditorsPick[];
 	onChange: (next: EditorsPick[]) => void;
 	onClose: () => void;
+	categoryId?: string;
 }) {
 	const [query, setQuery] = useState("");
 	const [staged, setStaged] = useState<EditorsPick[]>(selected);
@@ -42,7 +44,7 @@ export function PostPicker({
 		let cancelled = false;
 		setLoading(true);
 		const timer = setTimeout(() => {
-			searchPosts(query)
+			searchPosts(query, categoryId)
 				.then((posts) => {
 					if (cancelled) return;
 					setResults(posts.map((p) => ({ id: p.id, title: p.title })));
@@ -55,7 +57,7 @@ export function PostPicker({
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	}, [query]);
+	}, [query, categoryId]);
 
 	function toggle(pick: EditorsPick) {
 		setStaged((cur) =>

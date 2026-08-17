@@ -230,7 +230,12 @@ export default function EditCategory() {
 			)}
 
 			{pickerOpen && (
-				<PostPicker selected={picks} onChange={setPicks} onClose={() => setPickerOpen(false)} />
+				<PostPicker
+					selected={picks}
+					onChange={setPicks}
+					onClose={() => setPickerOpen(false)}
+					categoryId={id}
+				/>
 			)}
 
 			{deleteModalOpen && (

@@ -168,14 +168,26 @@ export async function listPostsPage({
 }
 
 // Published posts matching a title search, for pickers that can't afford to
-// load the full post list (e.g. once there are hundreds of posts).
-export async function searchPosts(query: string, limit = 20): Promise<Post[]> {
+// load the full post list (e.g. once there are hundreds of posts). Pass
+// categoryId to restrict results to posts already tagged with that category
+// (e.g. picking Editor's Picks from the makeup category shouldn't surface
+// skincare-only posts).
+export async function searchPosts(query: string, categoryId?: string, limit = 20): Promise<Post[]> {
+	const select = categoryId
+		? LIST_SELECT.replace(
+				"categories:post_categories(",
+				"categories:post_categories!inner(",
+			)
+		: LIST_SELECT;
+
 	let q = supabaseBrowser()
 		.from("posts")
-		.select(LIST_SELECT)
+		.select(select)
 		.eq("status", "published")
 		.order("title")
 		.limit(limit);
+
+	if (categoryId) q = q.eq("categories.category_id", categoryId);
 
 	const trimmed = query.trim();
 	if (trimmed) q = q.ilike("title", `%${trimmed}%`);
