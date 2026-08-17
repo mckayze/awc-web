@@ -6,9 +6,12 @@ import { useParams, useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import {
+	countCategoryPosts,
 	deleteCategory,
 	getCategoryById,
+	listCategories,
 	listEditorsPicks,
+	migrateCategoryPosts,
 	setEditorsPicks,
 	slugify,
 	updateCategory,
@@ -20,6 +23,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Text } from "@/components/ui/Text";
 import { PostPicker } from "@/components/admin/PostPicker";
+import { DeleteCategoryModal } from "@/components/admin/DeleteCategoryModal";
 
 export default function EditCategory() {
 	const { id } = useParams<{ id: string }>();
@@ -34,6 +38,10 @@ export default function EditCategory() {
 
 	const [picks, setPicks] = useState<EditorsPick[]>([]);
 	const [pickerOpen, setPickerOpen] = useState(false);
+
+	const [otherCategories, setOtherCategories] = useState<Category[]>([]);
+	const [deletePostCount, setDeletePostCount] = useState(0);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
 	useEffect(() => {
 		if (!id) return;
@@ -73,8 +81,42 @@ export default function EditCategory() {
 
 	async function handleDelete() {
 		if (!id) return;
-		if (!confirm("Delete this category? This cannot be undone.")) return;
 		setError(null);
+		try {
+			const postCount = await countCategoryPosts(id);
+			if (postCount === 0) {
+				if (!confirm("Delete this category? This cannot be undone.")) return;
+				setDeleting(true);
+				await deleteCategory(id);
+				router.push("/admin/categories");
+				return;
+			}
+			const categories = await listCategories();
+			setOtherCategories(categories.filter((c) => c.id !== id));
+			setDeletePostCount(postCount);
+			setDeleteModalOpen(true);
+		} catch (err) {
+			setError((err as Error).message);
+			setDeleting(false);
+		}
+	}
+
+	async function handleMigrateAndDelete(targetId: string) {
+		if (!id) return;
+		setDeleting(true);
+		try {
+			await migrateCategoryPosts(id, targetId);
+			await deleteCategory(id);
+			router.push("/admin/categories");
+		} catch (err) {
+			setError((err as Error).message);
+			setDeleting(false);
+			setDeleteModalOpen(false);
+		}
+	}
+
+	async function handleDeleteWithoutMigrating() {
+		if (!id) return;
 		setDeleting(true);
 		try {
 			await deleteCategory(id);
@@ -82,6 +124,7 @@ export default function EditCategory() {
 		} catch (err) {
 			setError((err as Error).message);
 			setDeleting(false);
+			setDeleteModalOpen(false);
 		}
 	}
 
@@ -188,6 +231,17 @@ export default function EditCategory() {
 
 			{pickerOpen && (
 				<PostPicker selected={picks} onChange={setPicks} onClose={() => setPickerOpen(false)} />
+			)}
+
+			{deleteModalOpen && (
+				<DeleteCategoryModal
+					postCount={deletePostCount}
+					otherCategories={otherCategories}
+					busy={deleting}
+					onMigrateAndDelete={handleMigrateAndDelete}
+					onDeleteWithoutMigrating={handleDeleteWithoutMigrating}
+					onCancel={() => setDeleteModalOpen(false)}
+				/>
 			)}
 		</section>
 	);

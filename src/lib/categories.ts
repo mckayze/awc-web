@@ -57,6 +57,36 @@ export async function deleteCategory(id: string) {
 	if (error) throw new Error(error.message);
 }
 
+export async function countCategoryPosts(id: string): Promise<number> {
+	const { count, error } = await supabaseBrowser()
+		.from("post_categories")
+		.select("post_id", { count: "exact", head: true })
+		.eq("category_id", id);
+	if (error) throw new Error(error.message);
+	return count ?? 0;
+}
+
+// Adds toId to every post currently in fromId (duplicates ignored via the
+// post_categories (post_id, category_id) primary key), so a post that already
+// has both categories just keeps toId once the old one is removed. Doesn't
+// remove fromId itself — the caller deletes the category, which cascades.
+export async function migrateCategoryPosts(fromId: string, toId: string): Promise<void> {
+	const { data, error } = await supabaseBrowser()
+		.from("post_categories")
+		.select("post_id")
+		.eq("category_id", fromId);
+	if (error) throw new Error(error.message);
+	if (!data || data.length === 0) return;
+
+	const { error: upsertErr } = await supabaseBrowser()
+		.from("post_categories")
+		.upsert(
+			data.map(({ post_id }) => ({ post_id, category_id: toId })),
+			{ onConflict: "post_id,category_id", ignoreDuplicates: true },
+		);
+	if (upsertErr) throw new Error(upsertErr.message);
+}
+
 export type EditorsPick = { id: string; title: string };
 
 // Posts currently featured as Editor's Picks under this category, in display
