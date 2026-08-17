@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -51,6 +51,11 @@ export function RichText({
 	onPaste,
 	onPasteGrid,
 }: RichTextProps) {
+	// Placeholder.configure captures its text once at editor creation, so a
+	// changing prop (e.g. heading level) needs to flow through a ref instead.
+	const placeholderRef = useRef(placeholder ?? "Type / to choose a block");
+	placeholderRef.current = placeholder ?? "Type / to choose a block";
+
 	const editor = useEditor({
 		// The editor renders client-side only: SSR would emit markup the browser
 		// then re-creates, which React flags as a hydration mismatch.
@@ -66,7 +71,7 @@ export function RichText({
 				horizontalRule: false,
 				link: { openOnClick: false },
 			}),
-			Placeholder.configure({ placeholder: placeholder ?? "Type / to choose a block" }),
+			Placeholder.configure({ placeholder: () => placeholderRef.current }),
 		],
 		content: html ? `<p>${html}</p>` : "",
 		editorProps: {
@@ -127,6 +132,18 @@ export function RichText({
 	useEffect(() => {
 		if (editor && autoFocus) editor.commands.focus("end");
 	}, [editor, autoFocus]);
+
+	// editorProps.attributes is only read at creation, so pushing a class change
+	// (e.g. switching heading level) needs an explicit setOptions to reach the DOM.
+	useEffect(() => {
+		editor?.setOptions({ editorProps: { attributes: { class: twMerge("be-rich", className) } } });
+	}, [editor, className]);
+
+	// Placeholder decorations are only recomputed on redraw, so force one after
+	// the ref above picks up the new text.
+	useEffect(() => {
+		if (editor) editor.view.updateState(editor.state);
+	}, [editor, placeholder]);
 
 	// Pull in external changes (e.g. a type transform) without disturbing typing.
 	useEffect(() => {
