@@ -10,8 +10,8 @@ const INLINE =
 	"[&_a]:underline [&_a]:underline-offset-2 [&_a]:text-black [&_strong]:font-semibold [&_em]:italic";
 
 const HEADING_CLASS: Record<2 | 3 | 4, string> = {
-	2: "text-3xl md:text-4xl mt-4",
-	3: "text-xl md:text-2xl opacity-90",
+	2: "text-4xl md:text-5xl mt-4",
+	3: "text-2xl md:text-3xl opacity-90",
 	4: "text-lg md:text-xl",
 };
 
