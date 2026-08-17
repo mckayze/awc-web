@@ -125,7 +125,7 @@ export function Navbar({
 
 						<Link
 							href="/"
-							className="text-[40px] font-bold text-slate-950 px-4 leading-none"
+							className="shrink-0 text-[clamp(32px,3.2vw,48px)] font-bold text-slate-950 px-4 leading-none whitespace-nowrap"
 							style={{ fontFamily: "var(--font-title)" }}
 						>
 							{logo}
@@ -171,7 +171,7 @@ export function Navbar({
 
 						<Link
 							href="/"
-							className="justify-self-center text-lg sm:text-2xl font-bold text-slate-950 text-center bg-brand px-2 py-1 leading-tight font-title whitespace-nowrap"
+							className="justify-self-center text-[clamp(1.35rem,6vw,2.25rem)] font-bold text-slate-950 text-center leading-tight font-title whitespace-nowrap"
 						>
 							{logo}
 						</Link>

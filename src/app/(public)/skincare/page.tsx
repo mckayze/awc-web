@@ -24,7 +24,6 @@ export default async function SkincarePage() {
 	const [posts, editorsPicks] = await Promise.all([listPosts(), getEditorsPicks("skincare")]);
 	const categoryPosts = posts.filter((p) => p.categories.includes("Skincare"));
 	const [featuredPost, ...sidePosts] = categoryPosts.slice(0, 4);
-	const latestPosts = categoryPosts.slice(4, 7);
 
 	return (
 		<CategoryPage
@@ -33,7 +32,6 @@ export default async function SkincarePage() {
 			products={products}
 			featuredPost={featuredPost}
 			sidePosts={sidePosts}
-			latestPosts={latestPosts}
 			editorsPicks={editorsPicks}
 		/>
 	);

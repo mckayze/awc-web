@@ -1,9 +1,6 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Section } from "./Section";
 import { Container } from "./Container";
 import { SectionHeading } from "./SectionHeading";
-import { ProductScroller } from "./ProductScroller";
 import { TrendingPostCard } from "./TrendingPostCard";
 import { FeaturedPostCard } from "./FeaturedPostCard";
 import { SidePostCard } from "./SidePostCard";
@@ -17,7 +14,6 @@ type CategoryPageProps = {
 	products: Product[];
 	featuredPost?: PostSummary;
 	sidePosts?: PostSummary[];
-	latestPosts: PostSummary[];
 	editorsPicks: PostSummary[];
 };
 
@@ -27,20 +23,8 @@ export function CategoryPage({
 	products,
 	featuredPost,
 	sidePosts = [],
-	latestPosts,
 	editorsPicks,
 }: CategoryPageProps) {
-	const viewAllHref = `/blog?category=${encodeURIComponent(category)}`;
-
-	const ViewAllLink = () => (
-		<Link
-			href={viewAllHref}
-			className="inline-flex items-center gap-2 text-base font-medium text-black hover:underline underline-offset-4"
-		>
-			View all {category} <ArrowRight size={16} />
-		</Link>
-	);
-
 	return (
 		<>
 			{/* Hero */}
@@ -63,20 +47,6 @@ export function CategoryPage({
 					)}
 				</Container>
 			</Section>
-
-			{/* Latest Posts */}
-			{latestPosts.length > 0 && (
-				<Section className="bg-background border-b border-border">
-					<Container>
-						<SectionHeading title={`Latest in ${category}`} action={<ViewAllLink />} />
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-							{latestPosts.map((post) => (
-								<TrendingPostCard key={post.slug} post={post} />
-							))}
-						</div>
-					</Container>
-				</Section>
-			)}
 
 			{/* Editor's Picks */}
 			<Section className="bg-white border-b border-border">
