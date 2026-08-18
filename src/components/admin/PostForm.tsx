@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
@@ -9,6 +9,7 @@ import type { Category } from "@/lib/categories";
 import { EMPTY_CONTENT, postState } from "@/lib/posts";
 import type { PostContent, PostInput, PostStatus } from "@/lib/posts";
 import { usePermissions } from "@/lib/permissions";
+import { useUnsavedChangesGuard, UNSAVED_CHANGES_MESSAGE } from "@/lib/useUnsavedChangesGuard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -18,12 +19,20 @@ import { MultiSelect } from "@/components/admin/MultiSelect";
 import { DateTimePicker } from "@/components/admin/DateTimePicker";
 import { BlockEditor } from "@/components/admin/BlockEditor";
 
+// Drafts only save themselves in the background — publishing/scheduling a
+// post is a deliberate act, not something that should happen mid-typo.
+const AUTOSAVE_INTERVAL_MS = 20_000;
+
 // What the form collects. Create/Edit pages turn this into a PostInput +
 // category id list and persist it.
 export type PostFormSubmit = {
 	input: PostInput;
 	categoryIds: string[];
 };
+
+// `silent: true` marks a background autosave rather than an explicit click,
+// so the caller can skip anything that should only happen on a manual save.
+export type PostFormSubmitOptions = { silent?: boolean };
 
 export type PostFormInitial = {
 	title?: string;
@@ -63,13 +72,19 @@ export function PostForm({
 	error,
 	notice = null,
 	onSubmit,
+	autosave = false,
+	onDirtyChange,
 }: {
 	submitLabel: string;
 	initial?: PostFormInitial;
 	submitting: boolean;
 	error: string | null;
 	notice?: string | null;
-	onSubmit: (data: PostFormSubmit) => void;
+	onSubmit: (data: PostFormSubmit, opts?: PostFormSubmitOptions) => Promise<boolean>;
+	// Background-save drafts on an interval. Off by default (e.g. a brand-new
+	// post on the create page has nothing to autosave to yet).
+	autosave?: boolean;
+	onDirtyChange?: (dirty: boolean) => void;
 }) {
 	const { has } = usePermissions();
 	const router = useRouter();
@@ -112,20 +127,17 @@ export function PostForm({
 		if (!slugEdited) setSlug(slugify(value));
 	}
 
-	function handleSubmit(e: FormEvent<HTMLFormElement>) {
-		e.preventDefault();
-
-		// Map visibility → (status, published_at). Published and scheduled are
-		// the same underlying state (status "published" + a date); the date
-		// field is directly editable in both, defaulting to now if untouched.
+	// Map visibility → (status, published_at). Published and scheduled are the
+	// same underlying state (status "published" + a date); the date field is
+	// directly editable in both, defaulting to now if untouched.
+	function buildSubmitData(): PostFormSubmit {
 		let status: PostStatus = "draft";
 		let publishedAt: string | null = null;
 		if (visibility === "published" || visibility === "scheduled") {
 			status = "published";
 			publishedAt = localInputToIso(scheduledAt) ?? new Date().toISOString();
 		}
-
-		onSubmit({
+		return {
 			input: {
 				title: title.trim(),
 				slug: slug.trim(),
@@ -136,8 +148,58 @@ export function PostForm({
 				publishedAt,
 			},
 			categoryIds,
-		});
+		};
 	}
+
+	// Whether the form differs from the last successful save. Recomputed every
+	// render and compared against a ref that only moves when a save actually
+	// lands, so it stays correct through both manual saves and autosaves.
+	const snapshot = JSON.stringify({
+		title,
+		slug,
+		excerpt,
+		content,
+		visibility,
+		scheduledAt,
+		featuredId,
+		categoryIds,
+	});
+	const lastSavedRef = useRef(snapshot);
+	const dirty = snapshot !== lastSavedRef.current;
+
+	useEffect(() => {
+		onDirtyChange?.(dirty);
+	}, [dirty, onDirtyChange]);
+
+	useUnsavedChangesGuard(dirty);
+
+	async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+		e.preventDefault();
+		const pending = snapshot;
+		const ok = await onSubmit(buildSubmitData());
+		if (ok) lastSavedRef.current = pending;
+	}
+
+	// Background-save drafts on a fixed interval rather than debouncing off
+	// the last keystroke, so a post that's edited continuously still gets
+	// saved periodically instead of the timer resetting forever. Reads
+	// through a ref so the interval itself doesn't get torn down and
+	// recreated on every keystroke.
+	const latest = useRef({ dirty, submitting, snapshot, visibility, onSubmit, buildSubmitData });
+	latest.current = { dirty, submitting, snapshot, visibility, onSubmit, buildSubmitData };
+
+	useEffect(() => {
+		if (!autosave) return;
+		const timer = setInterval(() => {
+			const { dirty, submitting, snapshot, visibility, onSubmit, buildSubmitData } = latest.current;
+			if (!dirty || submitting || visibility !== "draft") return;
+			const pending = snapshot;
+			void onSubmit(buildSubmitData(), { silent: true }).then((ok) => {
+				if (ok) lastSavedRef.current = pending;
+			});
+		}, AUTOSAVE_INTERVAL_MS);
+		return () => clearInterval(timer);
+	}, [autosave]);
 
 	return (
 		<form onSubmit={handleSubmit} className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -295,7 +357,10 @@ export function PostForm({
 					<Button
 						type="button"
 						variant="outline"
-						onClick={() => router.push("/admin/posts")}
+						onClick={() => {
+							if (dirty && !window.confirm(UNSAVED_CHANGES_MESSAGE)) return;
+							router.push("/admin/posts");
+						}}
 						className="min-h-10 shrink-0 px-4"
 						leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
 					>

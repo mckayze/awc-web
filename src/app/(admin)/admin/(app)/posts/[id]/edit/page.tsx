@@ -7,8 +7,9 @@ import { ArrowLeft, ExternalLink, Eye } from "lucide-react";
 import { deletePost, getPostById, postState, setPostCategories, updatePost } from "@/lib/posts";
 import type { Post } from "@/lib/posts";
 import { usePermissions } from "@/lib/permissions";
+import { UNSAVED_CHANGES_MESSAGE } from "@/lib/useUnsavedChangesGuard";
 import { PostForm } from "@/components/admin/PostForm";
-import type { PostFormSubmit } from "@/components/admin/PostForm";
+import type { PostFormSubmit, PostFormSubmitOptions } from "@/components/admin/PostForm";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
 
 export default function EditPost() {
@@ -22,6 +23,7 @@ export default function EditPost() {
 	const [notice, setNotice] = useState<string | null>(null);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [deleting, setDeleting] = useState(false);
+	const [dirty, setDirty] = useState(false);
 
 	useEffect(() => {
 		if (!id) return;
@@ -38,8 +40,11 @@ export default function EditPost() {
 		return () => clearTimeout(t);
 	}, [notice]);
 
-	async function handleSubmit({ input, categoryIds }: PostFormSubmit) {
-		if (!id) return;
+	async function handleSubmit(
+		{ input, categoryIds }: PostFormSubmit,
+		opts?: PostFormSubmitOptions,
+	): Promise<boolean> {
+		if (!id) return false;
 		setError(null);
 		setNotice(null);
 		setSubmitting(true);
@@ -48,10 +53,12 @@ export default function EditPost() {
 			await setPostCategories(id, categoryIds);
 			// Stay on the page — just confirm the save.
 			setSubmitting(false);
-			setNotice("All changes saved");
+			setNotice(opts?.silent ? "Draft autosaved" : "All changes saved");
+			return true;
 		} catch (err) {
 			setError((err as Error).message);
 			setSubmitting(false);
+			return false;
 		}
 	}
 
@@ -91,6 +98,9 @@ export default function EditPost() {
 			<div className="flex items-center justify-between gap-4">
 				<Link
 					href="/admin/posts"
+					onClick={(e) => {
+						if (dirty && !window.confirm(UNSAVED_CHANGES_MESSAGE)) e.preventDefault();
+					}}
 					className="border-body text-body hover:bg-body hover:text-background inline-flex items-center gap-1.5 border px-3 py-2 text-sm font-medium transition-colors"
 				>
 					<ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -119,6 +129,8 @@ export default function EditPost() {
 				submitting={submitting}
 				error={error}
 				notice={notice}
+				autosave
+				onDirtyChange={setDirty}
 				initial={{
 					title: post.title,
 					slug: post.slug,
