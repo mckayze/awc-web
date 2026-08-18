@@ -22,10 +22,14 @@ import {
 	Trash2,
 } from "lucide-react";
 import { twMerge } from "@/lib/twMerge";
-import type { Block, BlockType } from "@/lib/posts";
+import type { Block, BlockType, Post } from "@/lib/posts";
+import { postState, searchPosts } from "@/lib/posts";
+import { Button } from "@/components/ui/Button";
 import { BLOCK_META, TEXT_TRANSFORMS } from "./registry";
 
 const TEXT_TYPES: BlockType[] = ["paragraph", "subtext", "heading", "quote", "list"];
+const INTERNAL_LINK_RE = /^\/blog\/(.+)$/;
+const SEARCH_DEBOUNCE_MS = 250;
 
 // Re-render the toolbar whenever the editor selection/content changes so the
 // active states of B / I / link stay in sync.
@@ -87,15 +91,26 @@ export function BlockToolbar({
 	// Tables aren't transformable, but their cells are rich text.
 	const canFormat = (isText || block.type === "table") && editor;
 
-	function toggleLink() {
-		if (!editor) return;
-		if (editor.isActive("link")) {
-			editor.chain().focus().unsetLink().run();
-			return;
+	const [linkMenuOpen, setLinkMenuOpen] = useState(false);
+	const linkMenuRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!linkMenuOpen) return;
+		function onDown(e: MouseEvent) {
+			if (linkMenuRef.current && !linkMenuRef.current.contains(e.target as Node)) {
+				setLinkMenuOpen(false);
+			}
 		}
-		const url = window.prompt("Link URL");
-		if (url) editor.chain().focus().setLink({ href: url }).run();
-	}
+		function onKey(e: KeyboardEvent) {
+			if (e.key === "Escape") setLinkMenuOpen(false);
+		}
+		document.addEventListener("mousedown", onDown);
+		document.addEventListener("keydown", onKey);
+		return () => {
+			document.removeEventListener("mousedown", onDown);
+			document.removeEventListener("keydown", onKey);
+		};
+	}, [linkMenuOpen]);
 
 	return (
 		<div
@@ -236,9 +251,18 @@ export function BlockToolbar({
 					>
 						<Italic className="h-4 w-4" />
 					</ToolbarButton>
-					<ToolbarButton label="Link" active={editor.isActive("link")} onClick={toggleLink}>
-						<Link2 className="h-4 w-4" />
-					</ToolbarButton>
+					<div ref={linkMenuRef} className="relative">
+						<ToolbarButton
+							label="Link"
+							active={editor.isActive("link")}
+							onClick={() => setLinkMenuOpen((o) => !o)}
+						>
+							<Link2 className="h-4 w-4" />
+						</ToolbarButton>
+						{linkMenuOpen && (
+							<LinkMenu editor={editor} onClose={() => setLinkMenuOpen(false)} />
+						)}
+					</div>
 				</>
 			)}
 
@@ -254,6 +278,163 @@ export function BlockToolbar({
 			<ToolbarButton label="Delete block" onClick={onDelete}>
 				<Trash2 className="h-4 w-4" />
 			</ToolbarButton>
+		</div>
+	);
+}
+
+// The link tool's popover: either type an external URL, or search for and
+// pick an already-published post (so editors never have to know/paste the
+// exact live slug, and can't accidentally link to a draft or a post
+// scheduled for the future that isn't visible on the frontend yet).
+function LinkMenu({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+	const currentHref = (editor.getAttributes("link").href as string | undefined) ?? "";
+	const internalMatch = currentHref.match(INTERNAL_LINK_RE);
+
+	const [tab, setTab] = useState<"post" | "url">(internalMatch ? "post" : "url");
+	const [url, setUrl] = useState(internalMatch ? "" : currentHref);
+	const [query, setQuery] = useState("");
+	const [results, setResults] = useState<Post[]>([]);
+	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		if (tab !== "post" || !query.trim()) {
+			setResults([]);
+			setLoading(false);
+			return;
+		}
+		let cancelled = false;
+		setLoading(true);
+		const timer = setTimeout(() => {
+			searchPosts(query)
+				.then((posts) => {
+					if (cancelled) return;
+					setResults(posts.filter((p) => postState(p.status, p.publishedAt) === "published"));
+				})
+				.finally(() => !cancelled && setLoading(false));
+		}, SEARCH_DEBOUNCE_MS);
+		return () => {
+			cancelled = true;
+			clearTimeout(timer);
+		};
+	}, [tab, query]);
+
+	function applyUrl() {
+		const trimmed = url.trim();
+		if (!trimmed) return;
+		editor.chain().focus().setLink({ href: trimmed }).run();
+		onClose();
+	}
+
+	function pickPost(post: Post) {
+		editor
+			.chain()
+			.focus()
+			.extendMarkRange("link")
+			.setLink({ href: `/blog/${post.slug}` })
+			.run();
+		onClose();
+	}
+
+	function removeLink() {
+		editor.chain().focus().unsetLink().run();
+		onClose();
+	}
+
+	return (
+		<div
+			// Stop this from bubbling to the toolbar's own onMouseDown, which
+			// preventDefault()s to keep the editor selection alive when clicking
+			// buttons — that would also block focusing the inputs in here.
+			onMouseDown={(e) => e.stopPropagation()}
+			className="border-border absolute left-0 top-full z-40 mt-1 w-72 border bg-white p-2 shadow-lg"
+		>
+			<div className="mb-2 flex items-center gap-1">
+				<button
+					type="button"
+					onClick={() => setTab("post")}
+					className={twMerge(
+						"flex-1 px-2 py-1 text-sm",
+						tab === "post" ? "bg-body text-white" : "hover:bg-nav text-body",
+					)}
+				>
+					Post
+				</button>
+				<button
+					type="button"
+					onClick={() => setTab("url")}
+					className={twMerge(
+						"flex-1 px-2 py-1 text-sm",
+						tab === "url" ? "bg-body text-white" : "hover:bg-nav text-body",
+					)}
+				>
+					URL
+				</button>
+			</div>
+
+			{tab === "post" ? (
+				<>
+					{internalMatch && (
+						<p className="text-body/50 mb-1.5 truncate text-xs">
+							Currently linked to {currentHref}
+						</p>
+					)}
+					<input
+						type="search"
+						autoFocus
+						value={query}
+						onChange={(e) => setQuery(e.target.value)}
+						placeholder="Search posts by title…"
+						className="border-border placeholder:text-body/40 text-body mb-1.5 min-h-9 w-full border bg-white px-2 text-sm focus:outline-none"
+					/>
+					<div className="max-h-60 overflow-y-auto">
+						{loading ? (
+							<p className="text-body/50 px-2 py-2 text-sm">Searching…</p>
+						) : !query.trim() ? (
+							<p className="text-body/50 px-2 py-2 text-sm">Type to search posts by title.</p>
+						) : results.length === 0 ? (
+							<p className="text-body/50 px-2 py-2 text-sm">No published posts found.</p>
+						) : (
+							results.map((post) => (
+								<button
+									key={post.id}
+									type="button"
+									onClick={() => pickPost(post)}
+									className="hover:bg-nav flex w-full items-center px-2 py-1.5 text-left text-sm"
+								>
+									<span className="truncate">{post.title}</span>
+								</button>
+							))
+						)}
+					</div>
+				</>
+			) : (
+				<div className="flex items-center gap-1.5">
+					<input
+						type="url"
+						autoFocus
+						value={url}
+						onChange={(e) => setUrl(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") applyUrl();
+						}}
+						placeholder="https://…"
+						className="border-border placeholder:text-body/40 text-body min-h-9 w-full border bg-white px-2 text-sm focus:outline-none"
+					/>
+					<Button type="button" variant="dark" className="min-h-9 px-3 text-sm" onClick={applyUrl}>
+						Apply
+					</Button>
+				</div>
+			)}
+
+			{editor.isActive("link") && (
+				<button
+					type="button"
+					onClick={removeLink}
+					className="text-body/60 hover:text-body mt-2 w-full px-2 py-1 text-left text-sm underline underline-offset-2"
+				>
+					Remove link
+				</button>
+			)}
 		</div>
 	);
 }
